@@ -1,0 +1,4 @@
+"balance_transaction_id","created_utc","available_on_utc","currency","gross","fee","net","reporting_category","description"
+"txn_SAMPLE0000000001","2025-07-01 15:04:05","2025-07-03 00:00:00","usd","200.00","6.10","193.90","charge","Invoice SAMPLE-0001"
+"txn_SAMPLE0000000002","2025-07-02 10:00:00","2025-07-04 00:00:00","usd","-50.00","0.00","-50.00","refund","REFUND FOR PAYMENT"
+"txn_SAMPLE0000000003","2025-07-05 00:00:00","2025-07-05 00:00:00","usd","-143.90","0.00","-143.90","payout","STRIPE PAYOUT"

@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Betterleaks secret-scanning config (also read by pre-commit and CI).
+# Uses the full default rule set; only the exact, reviewed non-secrets below are allowed.
+# Add to this list only after checking the value is a dummy or a public default, never to
+# silence a real key. Prefer an exact line over a broad pattern.
+
+title = "LedgerStitch secret scanning"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Reviewed non-secrets: test dummies, local Postgres dev defaults, prose"
+regexTarget = "line"
+regexes = [
+  # a documented local-dev Postgres (127.0.0.1:54322, user/password "postgres")
+  '''postgres(?:ql)?://postgres:postgres@127\.0\.0\.1:54322''',
+  # tests: URLs that must be rejected because they carry credentials
+  '''"https://user:pw@ollama\.com/download/OllamaSetup\.exe"''',
+  '''"http://user:pw@127\.0\.0\.1"''',
+  # tests: dummy vault passphrase and server-mode passwords
+  '''API_PW = "correct horse battery"''',
+  '''json=\{"setup_code": auth\.setup_code, "password": "short"\}''',
+  '''json=\{"password": "wrong password!"\}''',
+  '''"password": "correct horse battery staple"\}''',
+  # docs/RELEASE.md: prose about notarytool, no value
+  '''an Apple ID password: `notarytool store-credentials --key \.\.\. --key-id \.\.\. --issuer \.\.\.`''',
+]

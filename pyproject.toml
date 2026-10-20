@@ -1,0 +1,48 @@
+[project]
+name = "ledgerstitch"
+version = "1.2.0"
+description = "Private, local expense consolidation: every bank and card statement in one CPA-ready report."
+requires-python = ">=3.11"
+license = "AGPL-3.0-only"
+license-files = ["LICENSE"]
+dependencies = [
+  "duckdb>=1.1",
+  "cryptography>=43",
+  "argon2-cffi>=23",
+  "fastapi>=0.110",
+  "uvicorn>=0.30",
+  "python-multipart>=0.0.9",
+  "pdfplumber>=0.11",
+  "openpyxl>=3.1",
+  "defusedxml>=0.7",
+  "pydantic>=2.6",
+  "httpx>=0.27",
+]
+
+[project.optional-dependencies]
+# Cloud AI lives in the separate proprietary add-on: pip install ./pro[sdks] (ledgerstitch-pro).
+dev = ["pytest>=8"]
+# PyInstaller for the Community desktop bundle. See docs/RELEASE.md. Add-on builds install
+# the add-on's own dependencies on top.
+build = [
+  "pyinstaller>=6.10",
+]
+
+[project.scripts]
+ledgerstitch = "ledgerstitch.cli:main"
+ledgerstitch-desktop = "ledgerstitch.desktop:main"
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+# explicit: package only the core, never add-on packages that share the checkout
+include = ["ledgerstitch", "ledgerstitch.*"]
+
+[tool.setuptools.package-data]
+ledgerstitch = ["web/static/*", "web/static/fonts/*", "ingest/data/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "tests"]

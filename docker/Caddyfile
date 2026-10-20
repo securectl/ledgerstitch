@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Caddy in front of LedgerStitch: automatic HTTPS (Let's Encrypt for a public DNS name,
+# Caddy's own local CA for "localhost" or a LAN name), HTTP -> HTTPS redirect.
+{$LEDGERSTITCH_DOMAIN:localhost} {
+	encode gzip
+	request_body {
+		max_size 1100MB
+	}
+	reverse_proxy ledgerstitch:8080 {
+		header_up X-Forwarded-Proto {scheme}
+	}
+}

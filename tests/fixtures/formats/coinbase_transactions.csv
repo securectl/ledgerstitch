@@ -1,0 +1,6 @@
+Transactions
+User,Pat Sample,00000000-0000-0000-0000-000000000000
+ID,Timestamp,Transaction Type,Asset,Quantity Transacted,Price Currency,Price at Transaction,Subtotal,Total (inclusive of fees and/or spread),Fees and/or Spread,Notes
+00000000000000000000aaaa,2025-09-01 12:00:00 UTC,Buy,BTC,0.001,USD,"$60,000.00",$60.00,$61.49,$1.49,Bought 0.001 BTC for 61.49 USD
+00000000000000000000bbbb,2025-09-03 08:00:00 UTC,Card Spend,USDC,-4.5,USD,$1.00,$4.50,$4.50,$0.00,SAMPLE COFFEE CO
+00000000000000000000cccc,2025-09-05 09:00:00 UTC,Rewards Income,USDC,0.25,USD,$1.00,$0.25,$0.25,$0.00,USDC rewards

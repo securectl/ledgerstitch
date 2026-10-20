@@ -1,0 +1,72 @@
+name: Bug report
+description: Something in LedgerStitch Community doesn't work as documented.
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug.
+
+        > [!WARNING]
+        > **Never attach real statements, vaults (`.vault`), backups (`.lsbackup`), receipts,
+        > exports or screenshots that show real data**, not even copies you redacted by hand.
+        > If the bug depends on a file, reproduce it with a few **synthetic rows** you typed
+        > yourself, or use the redaction tool (**"Report this file's format"**, if your version
+        > has it) to attach a masked structure sample.
+        >
+        > Security problems go through the private process in SECURITY.md, never a public issue.
+  - type: input
+    id: version
+    attributes:
+      label: LedgerStitch version
+      description: Run `ledgerstitch --version`, or use the version in the downloaded file name.
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How do you run it?
+      options:
+        - Desktop app (macOS)
+        - Desktop app (Windows)
+        - From source (pip install -e .)
+        - Docker / self-hosted
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system and Python version
+      placeholder: "macOS 15.1 (Apple silicon), Python 3.12.7"
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Use synthetic data only.
+      placeholder: |
+        1. Create a vault
+        2. Import a CSV with these synthetic rows: ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error output
+      description: Paste the traceback or log lines. Check them for account numbers, names or amounts first.
+      render: text
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: This issue contains no real statements, account numbers, vault files or personal data.
+          required: true

@@ -1,0 +1,109 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# LedgerStitch Community, self-hosted, with automatic HTTPS from Caddy.
+#
+#   cd docker
+#   docker compose up -d                                              # https://localhost (Caddy's local CA)
+#   LEDGERSTITCH_DOMAIN=books.yourdomain.com docker compose up -d     # your real DNS name: Let's Encrypt
+#   docker compose logs ledgerstitch | grep "Setup code"              # first run: needed to set the admin password
+#   docker compose up -d ledgerstitch caddy                           # without local AI (no ollama service)
+#
+# Only Caddy publishes ports. LedgerStitch listens on plain HTTP inside the compose network
+# (LEDGERSTITCH_ALLOW_HTTP=1) and trusts Caddy's X-Forwarded-* headers (LEDGERSTITCH_TRUST_PROXY=1),
+# so never publish port 8080 directly with this configuration.
+#
+# Local AI: the "ollama" service runs Ollama for categorization (GLM-4.7-Flash, a 19 GB model that
+# needs about 24 GB of RAM; on Docker Desktop raise Settings -> Resources -> Memory). It is NOT
+# published to the host: only LedgerStitch reaches it, over the compose network, at the URL in
+# LEDGERSTITCH_OLLAMA_URL. Nothing is downloaded until someone agrees in the setup wizard's consent
+# dialog. Remove the downloaded model: Settings -> Privacy & AI -> Remove model, or delete the
+# volume: docker compose down && docker volume rm ledgerstitch_ollama-models.
+# LedgerStitch never gets the Docker socket: it can't start, stop or install containers.
+#
+# Caddy is optional: to use your own certificate instead, delete the caddy service, mount the
+# cert + key, set LEDGERSTITCH_TLS_CERT / LEDGERSTITCH_TLS_KEY, remove ALLOW_HTTP / TRUST_PROXY
+# and publish "8443:8080" (see docs/INSTALL.md).
+name: ledgerstitch
+
+services:
+  ledgerstitch:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: ledgerstitch:community
+    pull_policy: build                      # built locally from this checkout, never pulled
+    restart: unless-stopped
+    environment:
+      LEDGERSTITCH_ALLOW_HTTP: "1"          # TLS terminates at Caddy
+      LEDGERSTITCH_TRUST_PROXY: "1"         # trust X-Forwarded-Proto/-For from Caddy only
+      LEDGERSTITCH_ALLOWED_HOSTS: ${LEDGERSTITCH_DOMAIN:-localhost}
+      # The ollama service below; on a Mac, Ollama running natively is much faster (Metal GPU):
+      #   LEDGERSTITCH_OLLAMA_URL=http://host.docker.internal:11434 docker compose up -d ledgerstitch caddy
+      LEDGERSTITCH_OLLAMA_URL: ${LEDGERSTITCH_OLLAMA_URL:-http://ollama:11434}   # server mode only
+      # LEDGERSTITCH_ADMIN_PASSWORD_FILE: /run/secrets/ledgerstitch_admin   # optional: pre-set the password
+    volumes:
+      - ledgerstitch-data:/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # Linux: lets LEDGERSTITCH_OLLAMA_URL reach a host Ollama
+    expose:
+      - "8080"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+
+  ollama:
+    # Pinned. 0.40.6 = sha256:265409e1d931028a8f7d5a32bcbafddd7bffbc6cc629d77efe9560adf692a5e7
+    # (multi-arch index digest, Docker Hub, 2026-10-17). To pin by digest instead:
+    #   image: ollama/ollama:0.40.6@sha256:265409e1d931028a8f7d5a32bcbafddd7bffbc6cc629d77efe9560adf692a5e7
+    image: ollama/ollama:0.40.6
+    restart: unless-stopped
+    volumes:
+      - ollama-models:/root/.ollama         # downloaded models (GLM-4.7-Flash: 19 GB)
+    expose:
+      - "11434"                             # compose network only, never published to the host
+    environment:
+      OLLAMA_HOST: 0.0.0.0:11434
+      # Memory: merchant names need a small context, not the model's 198K default. With these,
+      # GLM-4.7-Flash fits in about 21 GB instead of failing with "signal: killed".
+      OLLAMA_CONTEXT_LENGTH: "8192"
+      OLLAMA_FLASH_ATTENTION: "1"
+      OLLAMA_KV_CACHE_TYPE: q8_0
+      OLLAMA_NUM_PARALLEL: "1"
+      OLLAMA_MAX_LOADED_MODELS: "1"
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 15s
+      timeout: 5s
+      start_period: 15s
+      retries: 5
+    # Linux + NVIDIA GPU (needs the NVIDIA Container Toolkit). Docker on macOS is CPU-only.
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  caddy:
+    image: caddy:2.8
+    restart: unless-stopped
+    depends_on:
+      - ledgerstitch
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      LEDGERSTITCH_DOMAIN: ${LEDGERSTITCH_DOMAIN:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  ledgerstitch-data:
+  ollama-models:
+  caddy-data:
+  caddy-config:

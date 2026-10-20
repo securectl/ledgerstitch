@@ -1,0 +1,109 @@
+{
+  "note": "Synthetic fixtures (fake data). catalog_id refers to ledgerstitch/ingest/data/known_formats.json.",
+  "files": [
+    {
+      "file": "schwab_bank_checking.csv",
+      "catalog_id": "schwab_bank_checking",
+      "format": "csv"
+    },
+    {
+      "file": "dcu_checking.csv",
+      "catalog_id": "dcu_checking",
+      "format": "csv"
+    },
+    {
+      "file": "mercury.csv",
+      "catalog_id": "mercury",
+      "format": "csv"
+    },
+    {
+      "file": "revolut.csv",
+      "catalog_id": "revolut",
+      "format": "csv"
+    },
+    {
+      "file": "paypal_activity.csv",
+      "catalog_id": "paypal_activity",
+      "format": "csv"
+    },
+    {
+      "file": "venmo_statement.csv",
+      "catalog_id": "venmo_statement",
+      "format": "csv"
+    },
+    {
+      "file": "stripe_balance_itemized.csv",
+      "catalog_id": "stripe_balance_itemized",
+      "format": "csv"
+    },
+    {
+      "file": "shopify_payments_transactions.csv",
+      "catalog_id": "shopify_payments_transactions",
+      "format": "csv"
+    },
+    {
+      "file": "coinbase_transactions.csv",
+      "catalog_id": "coinbase_transactions",
+      "format": "csv"
+    },
+    {
+      "file": "monzo.csv",
+      "catalog_id": "monzo",
+      "format": "csv"
+    },
+    {
+      "file": "ofx1_sgml_checking.ofx",
+      "catalog_id": "generic_ofx1",
+      "format": "ofx",
+      "variant": "1.0.2 SGML, BANKMSGSRSV1, CHECKING"
+    },
+    {
+      "file": "ofx2_xml_creditcard.ofx",
+      "catalog_id": null,
+      "format": "ofx",
+      "variant": "2.2.0 XML, CREDITCARDMSGSRSV1"
+    },
+    {
+      "file": "sample_savings.qfx",
+      "catalog_id": null,
+      "format": "qfx",
+      "variant": "OFX 1.0.2 + INTU.BID/INTU.USERID, SAVINGS"
+    },
+    {
+      "file": "sample_card.qbo",
+      "catalog_id": null,
+      "format": "qbo",
+      "variant": "OFX 1.0.2 + INTU.BID, credit card"
+    },
+    {
+      "file": "qif_bank.qif",
+      "catalog_id": "generic_qif",
+      "format": "qif",
+      "variant": "!Type:Bank, mixed date styles incl. MM/DD'YY, split"
+    },
+    {
+      "file": "qif_ccard.qif",
+      "catalog_id": null,
+      "format": "qif",
+      "variant": "!Account + !Type:CCard"
+    },
+    {
+      "file": "camt053_sample.xml",
+      "catalog_id": "generic_camt053",
+      "format": "camt053",
+      "variant": "camt.053.001.08"
+    },
+    {
+      "file": "mt940_sample.sta",
+      "catalog_id": "generic_mt940",
+      "format": "mt940",
+      "variant": "block-4 body only, no {1:}{2:} envelope"
+    },
+    {
+      "file": "bai2_sample.bai",
+      "catalog_id": "generic_bai2",
+      "format": "bai2",
+      "variant": "1 group, 1 account, control totals valid"
+    }
+  ]
+}

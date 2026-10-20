@@ -1,0 +1,45 @@
+# Python / tooling
+.venv/
+.venv-*/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# Build outputs
+build/
+dist/
+packaging/build-icon/
+
+# Private data: never commit workspaces, statements, receipts, models or keys
+*.vault/
+*.lsbackup
+*.pem
+*.key
+signing_key*
+ml-data/
+ml-runs/
+*.gguf
+*.safetensors
+*.CSV
+statements/
+~$*
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+.venv-ml/
+
+# Secrets / environment (service keys, DB URLs, passphrases)
+.env*
+!.env.example
+saas/node_modules/
+
+# Synthetic test fixtures are fake data and must be committed (the *.CSV rule above
+# also matches .csv on case-insensitive filesystems such as macOS)
+!tests/fixtures/*.csv
+!tests/fixtures/**/*.csv
+
+# Claude Code agent worktrees and local settings
+.claude/

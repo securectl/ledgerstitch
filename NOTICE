@@ -1,0 +1,48 @@
+LedgerStitch Community Edition
+Copyright (C) 2026 The LedgerStitch authors
+
+This program is free software: you can redistribute it and/or modify it under the terms of
+the GNU Affero General Public License as published by the Free Software Foundation, version 3
+only (SPDX: AGPL-3.0-only). See LICENSE for the full text.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+Network use (AGPL-3.0 section 13): if you modify LedgerStitch and let other people use it over
+a network, you must offer them the corresponding source of your modified version. The running
+app exposes its source location at GET /api/source.
+
+Trademark: "LedgerStitch" and the LedgerStitch logo are trademarks of the project's owner. The
+AGPL grants rights to the code, not to the name. Forks must use a different name (GOVERNANCE.md
+section 7).
+
+Commercial add-ons: the LedgerStitch Pro add-on, the hosted (SaaS) edition and the Enterprise
+edition are separate, proprietary products. They are not part of this repository and are not
+covered by this license. The core finds optional add-ons at runtime through the Python entry-point
+group "ledgerstitch.plugins" (docs/PLUGINS.md) and runs fully without them.
+
+Contributions are accepted under the Contributor License Agreement in CLA.md.
+
+Third-party software
+--------------------
+LedgerStitch depends on, but does not include, the following packages. Each is distributed
+under its own license; desktop builds bundle them unmodified.
+
+Runtime (pyproject.toml "dependencies"):
+  duckdb             MIT
+  cryptography       Apache-2.0 OR BSD-3-Clause
+  argon2-cffi        MIT
+  fastapi            MIT
+  uvicorn            BSD-3-Clause
+  python-multipart   Apache-2.0
+  pdfplumber         MIT
+  openpyxl           MIT
+  defusedxml         PSF-2.0
+  pydantic           MIT
+  httpx              BSD-3-Clause
+
+Desktop bundle only (pyproject.toml "build" extra):
+  pyinstaller           GPL-2.0-or-later with the PyInstaller bootloader exception
+
+A complete, machine-readable inventory (CycloneDX SBOM) is produced by every CI run and
+attached to each release.

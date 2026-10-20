@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="ll-token" content="__LEDGERSTITCH_TOKEN__">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#0A120E">
+  <meta name="referrer" content="no-referrer">
+  <title>LedgerStitch</title>
+  <link rel="icon" type="image/svg+xml" href="logo-mark.svg">
+  <script src="theme-init.js"></script>
+  <link rel="preload" href="fonts/inter-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div id="mock-banner" class="mock-banner" hidden>Demo mode — synthetic data, nothing leaves this browser tab.</div>
+
+  <div class="app" id="app">
+    <aside class="side" id="side" aria-label="Main navigation" hidden></aside>
+    <div class="main">
+      <header class="top" id="topbar" hidden>
+        <h1 id="page-title" tabindex="-1"></h1>
+        <span class="top-meta" id="top-meta"></span>
+        <span class="spacer"></span>
+        <span class="top-slot" id="top-slot"></span>
+        <div class="top-actions" id="top-actions"></div>
+      </header>
+      <main id="main" tabindex="-1">
+        <div class="loading" role="status"><span class="spinner" aria-hidden="true"></span> Starting LedgerStitch…</div>
+      </main>
+    </div>
+  </div>
+  <nav class="tabbar" id="tabbar" aria-label="Tabs" hidden></nav>
+
+  <div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
+  <div class="sr-only" id="announcer" aria-live="assertive"></div>
+  <noscript><p style="padding:24px">LedgerStitch needs JavaScript enabled. Everything still runs on your computer.</p></noscript>
+</body>
+</html>

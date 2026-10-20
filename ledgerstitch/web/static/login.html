@@ -1,0 +1,44 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: AGPL-3.0-only -->
+<!-- Server mode only (ledgerstitch --server): admin sign-in before the app loads. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#1F6F5C">
+  <title>Sign in · LedgerStitch</title>
+  <link rel="icon" type="image/svg+xml" href="logo-mark.svg">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="login.js"></script>
+</head>
+<body class="login-body">
+  <main class="login-wrap">
+    <div class="login-card card card-pad">
+      <img src="logo-mark.svg" alt="" width="44" height="44" class="login-mark">
+      <h1 id="login-title">Sign in</h1>
+      <p class="login-sub" id="login-sub">This LedgerStitch server is private.</p>
+      <form id="login-form" novalidate>
+        <div class="field" id="code-field" hidden>
+          <label for="setup-code">Setup code</label>
+          <input class="input mono" id="setup-code" autocomplete="off" spellcheck="false" placeholder="ABC123-DEF456-789ABC">
+          <span class="hint">In the server log. From the <code>docker</code> folder, run:<br>
+            <code class="copy-cmd">docker compose logs ledgerstitch | grep "Setup code"</code></span>
+        </div>
+        <div class="field">
+          <label for="pw" id="pw-label">Admin password</label>
+          <input class="input" id="pw" type="password" autocomplete="current-password" required>
+        </div>
+        <div class="field" id="pw2-field" hidden>
+          <label for="pw2">Repeat password</label>
+          <input class="input" id="pw2" type="password" autocomplete="new-password">
+        </div>
+        <p class="error-text" id="err" role="alert"></p>
+        <button class="btn btn-primary btn-block btn-lg" type="submit" id="submit">Sign in</button>
+      </form>
+      <p class="login-foot">Your workspaces stay encrypted. Each still needs its passphrase.</p>
+    </div>
+  </main>
+  <noscript><p style="padding:24px">LedgerStitch needs JavaScript enabled.</p></noscript>
+</body>
+</html>

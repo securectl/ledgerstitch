@@ -1,0 +1,5 @@
+Date (UTC),Description,Amount,Status,Bank Description,Reference,Note
+03-02-2025,Sample Software LLC,-249.00,Sent,SAMPLE SOFTWARE LLC,,
+03-04-2025,Example Client Inc,"5,000.00",Sent,EXAMPLE CLIENT INC ACH,INV-0001,March retainer
+03-05-2025,Fake Cloud Hosting,-31.07,Failed,FAKE CLOUD HOSTING,,
+03-09-2025,Sample Coffee Co,-6.25,Pending,SAMPLE COFFEE CO,,

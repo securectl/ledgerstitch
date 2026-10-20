@@ -1,0 +1,7 @@
+# Keep the Docker build context to the AGPL core. Never send data, keys or add-ons.
+*
+!pyproject.toml
+!LICENSE
+!ledgerstitch/
+ledgerstitch/**/__pycache__/
+ledgerstitch/_edition.py

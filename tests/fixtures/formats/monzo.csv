@@ -1,0 +1,4 @@
+Transaction ID,Date,Time,Type,Name,Emoji,Category,Amount,Currency,Local amount,Local currency,Notes and #tags,Address,Receipt,Description,Category split,Money Out,Money In,Balance,Balance currency
+tx_SAMPLE0001,01/10/2025,08:01:00,Card payment,Sample Coffee Co,,Eating out,-3.20,GBP,-3.20,GBP,,,,,,-3.20,,96.80,GBP
+tx_SAMPLE0002,02/10/2025,12:00:00,Faster payment,Example Client Ltd,,Income,500.00,GBP,500.00,GBP,#invoice,,,,,,500.00,596.80,GBP
+tx_SAMPLE0003,05/10/2025,19:45:00,Card payment,Fake Paris Cafe,,Holidays,-8.70,GBP,-10.00,EUR,,1 Sample Rue,,,,-8.70,,588.10,GBP

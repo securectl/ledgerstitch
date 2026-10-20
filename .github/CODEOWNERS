@@ -1,0 +1,7 @@
+# Every change needs a maintainer review (enforced with branch protection on main).
+*                          @securectl
+# Security-sensitive areas: crypto, secret scanning, CI and release.
+/ledgerstitch/security/    @securectl
+/.betterleaks.toml         @securectl
+/.pre-commit-config.yaml   @securectl
+/.github/                  @securectl

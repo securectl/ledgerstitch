@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Pre-commit hooks: block secrets, keys, vaults and real statements before they reach git.
+#
+#   brew install betterleaks pre-commit      # or: pipx install pre-commit; betterleaks from its releases page
+#   pre-commit install                       # once per clone
+#   pre-commit run --all-files               # check everything now
+#
+# CI runs the same Betterleaks scan over the full history (.github/workflows/ci.yml).
+repos:
+  - repo: https://github.com/betterleaks/betterleaks
+    rev: v1.9.0
+    hooks:
+      # Uses the betterleaks binary on PATH (no Go toolchain needed) and .betterleaks.toml.
+      - id: betterleaks-system
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: detect-private-key
+      - id: check-added-large-files
+        args: ["--maxkb=2048"]
+      - id: check-merge-conflict
+
+  - repo: local
+    hooks:
+      - id: python311-syntax
+        name: Python files compile on 3.11 (the minimum we support)
+        description: Catches 3.12-only syntax such as nested same-quote f-strings (PEP 701).
+        language: python
+        language_version: python3.11
+        entry: python -m py_compile
+        types: [python]
+      - id: no-statements-vaults-or-keys
+        name: Block real statements, vaults, backups and key files
+        description: Statement-like files are allowed only as synthetic fixtures under tests/fixtures/.
+        language: fail
+        entry: "Not allowed in git: real statements, vaults, backups or keys. Synthetic test data belongs in tests/fixtures/."
+        files: '(?i)(\.(pdf|csv|ofx|qfx|qif|xlsx?|lsbackup|vault|pem|key|p12|pfx)$|(^|/)vault\.json$|(^|/)\.env$)'
+        exclude: '^(tests/fixtures/|ledgerstitch/web/static/fonts/|ledgerstitch/ingest/data/)'
+      - id: maintainer-content-policy
+        name: Maintainer content policy (no-op unless the maintainer tooling is present)
+        description: Runs the maintainers' publishing content check when it exists in this checkout; skipped otherwise.
+        language: python
+        language_version: python3.11
+        entry: sh -c '[ -f tools/repo_split/split.py ] || exit 0; exec python tools/repo_split/denylist_hook.py "$@"' --
+        types: [text]
+        pass_filenames: true

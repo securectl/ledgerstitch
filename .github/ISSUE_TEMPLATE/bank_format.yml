@@ -1,0 +1,66 @@
+name: Bank format request
+description: Ask for (or help add) support for a bank, card or platform export LedgerStitch doesn't read yet.
+labels: ["bank-format", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!CAUTION]
+        > **Never attach a real statement**, not even one you redacted by hand: it's easy to miss
+        > an account number, a name or an address in a PDF's hidden text layer.
+        >
+        > Use one of these instead:
+        > 1. **The redaction tool**, if your version has it: **"Report this file's format"** in
+        >    the app exports a masked structure sample (column names, date and amount formats,
+        >    row shapes) with no amounts, descriptions or account numbers.
+        > 2. **Synthetic rows:** copy the header row exactly, then type two or three made-up rows
+        >    (fake merchants, fake amounts, `XXXX` for any card digits).
+        >
+        > We delete issues that contain real financial data.
+  - type: input
+    id: institution
+    attributes:
+      label: Bank, card or platform
+      placeholder: "First Example Credit Union (checking)"
+    validations:
+      required: true
+  - type: dropdown
+    id: filetype
+    attributes:
+      label: File type
+      options:
+        - CSV
+        - PDF (text-based)
+        - PDF (scanned / image only)
+        - OFX / QFX / QBO
+        - QIF
+        - Excel (XLSX / XLS)
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: export_path
+    attributes:
+      label: Where in the bank's site did you export it?
+      placeholder: "Accounts → Activity → Download → CSV"
+  - type: textarea
+    id: sample
+    attributes:
+      label: Masked structure sample or synthetic rows
+      description: Paste the output of "Report this file's format", or a header row plus made-up rows.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: What LedgerStitch does with it today
+      description: For example "detected as generic CSV, amounts have the wrong sign", or the error message.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I am not attaching a real statement. The sample above is masked or synthetic.
+          required: true
+        - label: I'd like to try adding the profile myself (see CONTRIBUTING.md).

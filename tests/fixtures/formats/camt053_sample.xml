@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.053.001.08" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <BkToCstmrStmt>
+    <GrpHdr>
+      <MsgId>SAMPLE-MSG-20250131-0001</MsgId>
+      <CreDtTm>2025-02-01T06:00:00-05:00</CreDtTm>
+    </GrpHdr>
+    <Stmt>
+      <Id>SAMPLE-STMT-202501</Id>
+      <ElctrncSeqNb>1</ElctrncSeqNb>
+      <CreDtTm>2025-02-01T06:00:00-05:00</CreDtTm>
+      <FrToDt><FrDtTm>2025-01-01T00:00:00-05:00</FrDtTm><ToDtTm>2025-01-31T23:59:59-05:00</ToDtTm></FrToDt>
+      <Acct>
+        <Id><Othr><Id>000012345678</Id></Othr></Id>
+        <Ccy>USD</Ccy>
+        <Svcr><FinInstnId><Nm>SAMPLE BANK NA</Nm></FinInstnId></Svcr>
+      </Acct>
+      <Bal>
+        <Tp><CdOrPrtry><Cd>OPBD</Cd></CdOrPrtry></Tp>
+        <Amt Ccy="USD">1000.00</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <Dt><Dt>2025-01-01</Dt></Dt>
+      </Bal>
+      <Bal>
+        <Tp><CdOrPrtry><Cd>CLBD</Cd></CdOrPrtry></Tp>
+        <Amt Ccy="USD">3370.50</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <Dt><Dt>2025-01-31</Dt></Dt>
+      </Bal>
+      <TxsSummry>
+        <TtlNtries><NbOfNtries>4</NbOfNtries></TtlNtries>
+        <TtlCdtNtries><NbOfNtries>1</NbOfNtries><Sum>2500.00</Sum></TtlCdtNtries>
+        <TtlDbtNtries><NbOfNtries>3</NbOfNtries><Sum>129.50</Sum></TtlDbtNtries>
+      </TxsSummry>
+      <Ntry>
+        <NtryRef>1</NtryRef>
+        <Amt Ccy="USD">4.50</Amt>
+        <CdtDbtInd>DBIT</CdtDbtInd>
+        <Sts><Cd>BOOK</Cd></Sts>
+        <BookgDt><Dt>2025-01-03</Dt></BookgDt>
+        <ValDt><Dt>2025-01-03</Dt></ValDt>
+        <AcctSvcrRef>SAMPLEREF0001</AcctSvcrRef>
+        <BkTxCd><Domn><Cd>PMNT</Cd><Fmly><Cd>CCRD</Cd><SubFmlyCd>POSD</SubFmlyCd></Fmly></Domn></BkTxCd>
+        <NtryDtls><TxDtls>
+          <RltdPties><Cdtr><Pty><Nm>SAMPLE COFFEE CO</Nm></Pty></Cdtr></RltdPties>
+          <RmtInf><Ustrd>DEBIT CARD PURCHASE 0000</Ustrd></RmtInf>
+        </TxDtls></NtryDtls>
+      </Ntry>
+      <Ntry>
+        <NtryRef>2</NtryRef>
+        <Amt Ccy="USD">2500.00</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <Sts><Cd>BOOK</Cd></Sts>
+        <BookgDt><Dt>2025-01-05</Dt></BookgDt>
+        <ValDt><Dt>2025-01-05</Dt></ValDt>
+        <AcctSvcrRef>SAMPLEREF0002</AcctSvcrRef>
+        <BkTxCd><Domn><Cd>PMNT</Cd><Fmly><Cd>RCDT</Cd><SubFmlyCd>ACDT</SubFmlyCd></Fmly></Domn></BkTxCd>
+        <NtryDtls><TxDtls>
+          <RltdPties><Dbtr><Pty><Nm>EXAMPLE CLIENT INC</Nm></Pty></Dbtr></RltdPties>
+          <RmtInf><Ustrd>INVOICE 0001 PAYMENT</Ustrd></RmtInf>
+        </TxDtls></NtryDtls>
+      </Ntry>
+      <Ntry>
+        <NtryRef>3</NtryRef>
+        <Amt Ccy="USD">120.00</Amt>
+        <CdtDbtInd>DBIT</CdtDbtInd>
+        <Sts><Cd>BOOK</Cd></Sts>
+        <BookgDt><Dt>2025-01-10</Dt></BookgDt>
+        <ValDt><Dt>2025-01-10</Dt></ValDt>
+        <AcctSvcrRef>SAMPLEREF0003</AcctSvcrRef>
+        <BkTxCd><Domn><Cd>PMNT</Cd><Fmly><Cd>ICHQ</Cd><SubFmlyCd>CCHQ</SubFmlyCd></Fmly></Domn></BkTxCd>
+        <NtryDtls><TxDtls>
+          <Refs><ChqNb>1001</ChqNb></Refs>
+          <RmtInf><Ustrd>CHECK 1001</Ustrd></RmtInf>
+        </TxDtls></NtryDtls>
+      </Ntry>
+      <Ntry>
+        <NtryRef>4</NtryRef>
+        <Amt Ccy="USD">5.00</Amt>
+        <CdtDbtInd>DBIT</CdtDbtInd>
+        <Sts><Cd>BOOK</Cd></Sts>
+        <BookgDt><Dt>2025-01-31</Dt></BookgDt>
+        <ValDt><Dt>2025-01-31</Dt></ValDt>
+        <AcctSvcrRef>SAMPLEREF0004</AcctSvcrRef>
+        <BkTxCd><Domn><Cd>ACMT</Cd><Fmly><Cd>MDOP</Cd><SubFmlyCd>CHRG</SubFmlyCd></Fmly></Domn></BkTxCd>
+        <AddtlNtryInf>MONTHLY SERVICE FEE</AddtlNtryInf>
+      </Ntry>
+    </Stmt>
+  </BkToCstmrStmt>
+</Document>

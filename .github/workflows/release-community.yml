@@ -1,0 +1,213 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# UNTESTED: never run on GitHub Actions yet. Expect fixes on the first run.
+#
+# Builds the Community edition desktop installers:
+#   macos-14 (arm64) + macos-15-intel (x86_64): scripts/build_macos.sh -> LedgerStitch-<v>-macOS-<arch>.dmg
+#   windows-2022 (x64): scripts/build_windows.ps1 -> LedgerStitch-<v>-Windows-x64-Setup.exe
+# then collects everything with a combined SHA256SUMS.txt and, for v* tags, a DRAFT GitHub
+# release (publish it by hand after the clean-machine smoke tests in docs/RELEASE.md).
+#
+# Signing is optional and only runs when the secrets exist (unsigned builds otherwise):
+#   macOS:   APPLE_CERT_P12_BASE64, APPLE_CERT_PASSWORD, APPLE_TEAM_ID  (Developer ID Application)
+#            APPLE_NOTARY_KEY_ID, APPLE_NOTARY_ISSUER, APPLE_NOTARY_KEY_BASE64  (App Store Connect API key, .p8)
+#            The certificate is imported into a temporary keychain; build_macos.sh sections 5c/7c
+#            sign inside-out (IDENTITY), notarize + staple (NOTARIZE=1) before the checksum.
+#   Windows: WINDOWS_CERT_PFX_BASE64, WINDOWS_CERT_PASSWORD -> build_windows.ps1 section 5a
+#            (signtool on the exes; Inno Setup signs Setup.exe and the uninstaller).
+# Secrets can't be used in `if:` directly, so the job exposes HAS_* flags as env.
+name: release-community
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-community-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: build (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14        # Apple Silicon
+            arch: arm64
+          # Intel. (macos-13 runners were retired by GitHub; macos-15-intel is the
+          # remaining x86_64 image. The wheels still target MACOS_MIN=12.0.)
+          - os: macos-15-intel
+            arch: x86_64
+          - os: windows-2022
+            arch: x64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    env:
+      EDITION: community
+      HAS_APPLE_CERT: ${{ secrets.APPLE_CERT_P12_BASE64 != '' && secrets.APPLE_CERT_PASSWORD != '' && secrets.APPLE_TEAM_ID != '' }}
+      HAS_APPLE_NOTARY: ${{ secrets.APPLE_NOTARY_KEY_ID != '' && secrets.APPLE_NOTARY_ISSUER != '' && secrets.APPLE_NOTARY_KEY_BASE64 != '' }}
+      HAS_WIN_CERT: ${{ secrets.WINDOWS_CERT_PFX_BASE64 != '' && secrets.WINDOWS_CERT_PASSWORD != '' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.3.0
+        with:
+          version: "0.7.21"
+
+      # ------------------------------------------------------------------ macOS
+      - name: Import Developer ID certificate (optional)
+        if: runner.os == 'macOS' && env.HAS_APPLE_CERT == 'true'
+        env:
+          APPLE_CERT_P12_BASE64: ${{ secrets.APPLE_CERT_P12_BASE64 }}
+          APPLE_CERT_PASSWORD: ${{ secrets.APPLE_CERT_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          KEYCHAIN="$RUNNER_TEMP/ledgerstitch-signing.keychain-db"
+          KC_PASS="$(uuidgen)"
+          printf '%s' "$APPLE_CERT_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p "$KC_PASS" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KC_PASS" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN" -P "$APPLE_CERT_PASSWORD" -T /usr/bin/codesign
+          rm -f "$RUNNER_TEMP/cert.p12"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KC_PASS" "$KEYCHAIN" >/dev/null
+          # put the temp keychain first in the search list (keep the login/system ones)
+          # shellcheck disable=SC2046  # (word splitting intended: one keychain path per word)
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+          IDENTITY="$(security find-identity -v -p codesigning "$KEYCHAIN" |
+            awk -F'"' -v team="($APPLE_TEAM_ID)" '/Developer ID Application/ && index($2, team) {print $2; exit}')"
+          if [ -z "$IDENTITY" ]; then echo "No 'Developer ID Application ... ($APPLE_TEAM_ID)' identity in the certificate" >&2; exit 1; fi
+          echo "IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
+          echo "SIGN_KEYCHAIN=$KEYCHAIN" >> "$GITHUB_ENV"
+
+      - name: Prepare notarization key (optional)
+        if: runner.os == 'macOS' && env.HAS_APPLE_CERT == 'true' && env.HAS_APPLE_NOTARY == 'true'
+        env:
+          APPLE_NOTARY_KEY_BASE64: ${{ secrets.APPLE_NOTARY_KEY_BASE64 }}
+          APPLE_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+          APPLE_NOTARY_ISSUER: ${{ secrets.APPLE_NOTARY_ISSUER }}
+        run: |
+          set -euo pipefail
+          KEY="$RUNNER_TEMP/AuthKey_${APPLE_NOTARY_KEY_ID}.p8"
+          printf '%s' "$APPLE_NOTARY_KEY_BASE64" | base64 --decode > "$KEY"
+          chmod 600 "$KEY"
+          {
+            echo "NOTARIZE=1"
+            echo "NOTARY_KEY_PATH=$KEY"
+            echo "NOTARY_KEY_ID=$APPLE_NOTARY_KEY_ID"
+            echo "NOTARY_ISSUER=$APPLE_NOTARY_ISSUER"
+          } >> "$GITHUB_ENV"
+
+      - name: Build DMG (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "${{ matrix.arch }}" || { echo "runner arch $(uname -m) != ${{ matrix.arch }}" >&2; exit 1; }
+          bash scripts/build_macos.sh
+          for dmg in dist/*.dmg; do bash packaging/smoke_test.sh "$dmg"; done   # the artifact that ships
+
+      - name: Remove signing material (macOS)
+        if: always() && runner.os == 'macOS'
+        run: |
+          if [ -n "${SIGN_KEYCHAIN:-}" ]; then security delete-keychain "$SIGN_KEYCHAIN" || true; fi
+          rm -f "$RUNNER_TEMP"/AuthKey_*.p8 "$RUNNER_TEMP/cert.p12"
+
+      # ------------------------------------------------------------------ Windows
+      - name: Install Inno Setup (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: choco install innosetup -y --no-progress
+
+      - name: Decode code-signing certificate (optional)
+        if: runner.os == 'Windows' && env.HAS_WIN_CERT == 'true'
+        shell: pwsh
+        env:
+          WINDOWS_CERT_PFX_BASE64: ${{ secrets.WINDOWS_CERT_PFX_BASE64 }}
+        run: |
+          $pfx = Join-Path $env:RUNNER_TEMP "codesign.pfx"
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:WINDOWS_CERT_PFX_BASE64))
+          "SIGN_PFX=$pfx" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Build installer (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell          # Windows PowerShell 5.1, what end users / docs use
+        env:
+          SIGN_PFX_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+        run: .\scripts\build_windows.ps1
+
+      - name: Remove signing material (Windows)
+        if: always() && runner.os == 'Windows'
+        shell: pwsh
+        run: Remove-Item -Force -ErrorAction SilentlyContinue (Join-Path $env:RUNNER_TEMP "codesign.pfx")
+
+      # ------------------------------------------------------------------ artifacts
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: ledgerstitch-community-${{ matrix.os }}-${{ matrix.arch }}
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            dist/*.dmg
+            dist/*.dmg.sha256
+            dist/*-Setup.exe
+            dist/*-Setup.exe.sha256
+
+  checksums:
+    name: checksums + draft release
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write          # only used by the draft-release step (tags only)
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: release
+          pattern: ledgerstitch-community-*
+          merge-multiple: true
+
+      - name: Combined SHA256SUMS.txt
+        working-directory: release
+        run: |
+          set -euo pipefail
+          ls -la
+          # verify each per-file .sha256 written by the build scripts, then combine
+          for f in *.sha256; do
+            want="$(cut -d' ' -f1 "$f" | tr -d '\r\n' | tr 'A-F' 'a-f')"
+            have="$(sha256sum "${f%.sha256}" | cut -d' ' -f1)"
+            [ "$want" = "$have" ] || { echo "checksum mismatch for ${f%.sha256}" >&2; exit 1; }
+          done
+          find . -maxdepth 1 -type f ! -name '*.sha256' ! -name 'SHA256SUMS.txt' -printf '%f\n' |
+            sort | xargs sha256sum > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Upload SHA256SUMS.txt
+        uses: actions/upload-artifact@v7
+        with:
+          name: ledgerstitch-community-SHA256SUMS
+          path: release/SHA256SUMS.txt
+
+      - name: Draft GitHub release (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        working-directory: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          FILES=()
+          for f in *.dmg *-Setup.exe SHA256SUMS.txt; do [ -f "$f" ] && FILES+=("$f"); done
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "${FILES[@]}" --clobber
+          else
+            gh release create "$TAG" "${FILES[@]}" --draft --verify-tag \
+              --title "LedgerStitch ${TAG#v} (Community)" \
+              --notes "Community edition desktop builds. Verify downloads against SHA256SUMS.txt."
+          fi

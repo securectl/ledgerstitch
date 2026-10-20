@@ -1,0 +1,4 @@
+"Date","Transaction","Name","Memo","Amount"
+"2025-04-01","DEBIT","QUARTZ FUEL 0042   RIVERTON     WY","; 12345; ; ; ;","-38.50"
+"2025-04-03","CREDIT","PAYMENT THANK YOU","; 12345; ; ; ;","38.50"
+"2025-04-04","DEBIT","ZERO ROW","; ; ; ;","0.00"

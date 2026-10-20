@@ -1,0 +1,126 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Release on tag: a GitHub release whose notes are the CHANGELOG.md section for that version.
+#
+#   1. verify   tag vX.Y.Z == pyproject version == ledgerstitch.__version__, and CHANGELOG has "## [X.Y.Z]"
+#   2. test     Community suite + Betterleaks over the full history
+#   3. build    sdist + wheel, SHA256SUMS.txt, signed build provenance (GitHub attestations)
+#   4. release  create the release (or update it if release-community.yml made a draft first)
+#
+# Desktop installers come from release-community.yml, which uploads them to the same release.
+# Tags are created by tools/publish/publish.py --tag (annotated, from the monorepo).
+name: release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: v
+        name: Tag, version and changelog agree
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"; ver="${tag#v}"
+          py="$(python3 -c 'import tomllib;print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])')"
+          init="$(sed -nE 's/^__version__ = "([^"]+)"/\1/p' ledgerstitch/__init__.py)"
+          [ "$py" = "$ver" ] || { echo "pyproject version $py != tag $tag" >&2; exit 1; }
+          [ "$init" = "$ver" ] || { echo "ledgerstitch.__version__ $init != tag $tag" >&2; exit 1; }
+          grep -qE "^## \[${ver//./\\.}\]" CHANGELOG.md || { echo "CHANGELOG.md has no section for $ver" >&2; exit 1; }
+          echo "version=$ver" >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: verify
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e ".[dev]"
+      - run: LEDGERSTITCH_EDITION=community python -m pytest -q
+      - name: Betterleaks (full history)
+        env:
+          BETTERLEAKS_VERSION: "1.9.0"
+          BETTERLEAKS_SHA256: "f8b185a39ffcece2a1ca82bf3a4e7435cd81963ffd16b7a9128daf75f35f6de7"
+        run: |
+          f="betterleaks_${BETTERLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSfLO "https://github.com/betterleaks/betterleaks/releases/download/v${BETTERLEAKS_VERSION}/$f"
+          echo "${BETTERLEAKS_SHA256}  $f" | sha256sum -c -
+          tar -xzf "$f" -C /usr/local/bin betterleaks
+          betterleaks git --redact --exit-code 1 .
+
+  build:
+    needs: test
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write          # build provenance (Sigstore)
+      attestations: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: python -m pip install build
+      - run: python -m build
+      - name: SHA256SUMS.txt
+        working-directory: dist
+        run: sha256sum * | tee SHA256SUMS.txt
+      - uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: "dist/*.tar.gz, dist/*.whl"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: python-dist
+          path: dist/
+
+  release:
+    needs: [verify, build]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: python-dist
+          path: dist
+      - name: Release notes from CHANGELOG.md
+        env:
+          VER: ${{ needs.verify.outputs.version }}
+        run: |
+          set -euo pipefail
+          awk -v v="$VER" '
+            $0 ~ "^## \\[" v "\\]" {on=1; next}
+            on && /^## \[/ {exit}
+            on && /^\[[^]]+\]: / {exit}
+            on {print}' CHANGELOG.md > notes.md
+          printf '\n---\nVerify downloads against `SHA256SUMS.txt`. Build provenance: `gh attestation verify <file> -R %s`.\n' "$GITHUB_REPOSITORY" >> notes.md
+          cat notes.md
+      - name: Create or update the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --notes-file notes.md --title "LedgerStitch ${TAG#v}" --draft=false
+            gh release upload "$TAG" dist/* --clobber
+          else
+            gh release create "$TAG" dist/* --verify-tag --title "LedgerStitch ${TAG#v}" --notes-file notes.md
+          fi

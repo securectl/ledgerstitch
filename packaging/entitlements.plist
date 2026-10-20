@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Hardened-runtime entitlements for LedgerStitch (used only with real Developer ID signing).
+  - allow-unsigned-executable-memory / allow-jit: onnxruntime (OCR), numpy/ctypes/cffi callbacks
+    (argon2-cffi, cryptography) allocate executable memory.
+  - disable-library-validation: the bundle loads many third-party .so/.dylib files signed
+    ad hoc by their wheel authors; we re-sign them all with our identity, but keep this so a
+    stray library does not crash the app at launch. Remove once a notarized build is verified
+    to work without it.
+  No network-server entitlement is needed (not sandboxed); the app only binds 127.0.0.1.
+-->
+<plist version="1.0">
+<dict>
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+</dict>
+</plist>

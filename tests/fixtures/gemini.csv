@@ -1,0 +1,4 @@
+Reference Number,Transaction Post Date,Description of Transaction,Transaction Type,Amount
+1000000001,06/01/25,MAPLE DINER 0099 SALEM OR 97301,clearing,23.45
+1000000002,06/10/25,,payment_transaction,-23.45
+1000000003,06/12/25,MAPLE DINER 0099 SALEM OR 97301,purchase_return,-5.00

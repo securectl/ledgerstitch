@@ -1,0 +1,10 @@
+Description,,Summary Amt.
+Beginning balance as of 01/01/2025,,"1,000.00"
+Total credits,,"500.00"
+Total debits,,"-200.00"
+Ending balance as of 01/31/2025,,"1,300.00"
+
+Date,Description,Amount,Running Bal.
+01/01/2025,Beginning balance as of 01/01/2025,,"1,000.00"
+01/10/2025,"SUNRISE BAKERY 12/10 PURCHASE","-200.00","800.00"
+01/15/2025,"CLIENT ALPHA DES:DEPOSIT","500.00","1,300.00"

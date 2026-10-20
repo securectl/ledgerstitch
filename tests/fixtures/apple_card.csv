@@ -1,0 +1,4 @@
+Transaction Date,Clearing Date,Description,Merchant,Category,Type,Amount (USD),Purchased By
+11/01/2025,11/02/2025,"SOLSTICE YOGA 123 MAIN ST",Solstice Yoga,Health,Purchase,45.00,Pat Sample
+11/05/2025,11/05/2025,"ACH DEPOSIT INTERNET TRANSFER FROM ACCOUNT ENDING IN 0000",Ach Deposit,Payment,Payment,-45.00,Pat Sample
+11/06/2025,11/06/2025,"SOLSTICE YOGA 123 MAIN ST",Solstice Yoga,Health,Credit,-10.00,Pat Sample
