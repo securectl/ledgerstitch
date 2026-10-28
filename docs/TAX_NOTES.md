@@ -194,13 +194,15 @@ The tests in `tests/test_rules.py` cover them.
 ---
 
 ## 5. What LedgerStitch does NOT do
-- It is **not tax preparation software**. It does not compute tax, produce IRS forms, or check for
-  completeness or eligibility.
+- It is **not tax preparation software**. It does not compute income tax, produce IRS forms, or
+  check for completeness or eligibility. The one exception to "no tax arithmetic" is the pay stub
+  tool (section 8): payroll projections (Social Security and Medicare at their statutory rates,
+  annual contribution limits) shown as an *estimate*, never income tax.
 - It does **not e-file** or submit anything to the IRS, any state, or anyone else.
 - It does **not give tax, legal or accounting advice**. Lanes, categories and Schedule C lines are
   suggestions for the user and their tax professional to review.
 - It does not track trips, compute depreciation or home office, value inventory (COGS),
-  handle accrual accounting, do payroll, or handle state-specific rules.
+  handle accrual accounting, run payroll, or handle state-specific rules.
 - It does not substantiate deductions. Receipts, logs and business-purpose notes are still needed.
 - It sees only the statements the user imports. Cash expenses, a missing account, or a statement for
   the wrong period produce incomplete totals.
@@ -236,3 +238,53 @@ The tests in `tests/test_rules.py` cover them.
     (rule, keyword, AI, you).
 15. Keep your own copy of the original statements and the export. LedgerStitch is not a records-retention
     system.
+
+## 8. Pay stubs: projection, estimated W-2 and payroll signals (`ledgerstitch/payroll/`)
+
+**Boundary.** The pay stub tool reads what an employer printed, projects it to December 31 and
+compares it with published payroll rates and limits. It computes **no income tax**: no taxable
+income, brackets, credits or refund. Every output is labelled **"ESTIMATE — not issued by
+employer"**; the employer's W-2 is the document of record. Stubs are parsed in memory and never
+stored. SSNs and account numbers are masked before parsing.
+
+**What it estimates.** W-2 boxes 1-6, 10, 12 (C group-term life, D/E/G pre-tax deferrals, AA/BB
+Roth, W HSA employee + employer, DD only when the stub shows the employer's medical share),
+13 (retirement plan) and an informational box 14 line for Sec. 125 benefits. Box 1 = gross −
+pre-tax retirement − Sec. 125 items; boxes 3/5 = gross − Sec. 125 items (box 3 capped at the wage
+base); box 6 includes the 0.9% employers withhold above $200,000. Projection = YTD + this period's
+amount × pay dates left in the year (by pay date, which is what the W-2 follows); `--final` takes
+YTD as the total.
+
+**Pre-tax inference.** Social Security tax / 6.2% should equal gross minus the Sec. 125
+deductions (medical, dental, vision, HSA, FSA, DCAP); 401(k) deferrals are still FICA wages.
+When the stub's flags don't add up and exactly one set of deductions makes the arithmetic work,
+that set is used and marked "inferred". ADP's "Your federal taxable wages this period" line is
+checked the same way. Otherwise the stub's flags stay and a warning is shown.
+
+**Signals** (dollar amount + explanation + citation): excess Social Security across two or more
+employers (claimed on Schedule 3); 402(g) deferral room or excess per person across employers
+(catch-up contributions are mentioned, not assumed: the stub has no age); HSA together with a
+health FSA not known to be limited-purpose (Pub. 969); HSA, health FSA and dependent care over
+the limit; dependent care benefits when the user says a spouse has no earned income (§129(b));
+Additional Medicare Tax not withheld when combined Medicare wages exceed $200,000 single /
+$250,000 MFJ / $125,000 MFS (Form 8959; informational). Household-level planning beyond these
+signals is out of scope for the Community core.
+
+**Limits table** (`payroll/limits.py`, re-check every year before release):
+
+| Item | 2025 | 2026 | Source |
+|---|---|---|---|
+| Social Security wage base | 176,100 | 184,500 | SSA COLA fact sheets |
+| 402(g) elective deferrals | 23,500 | 24,500 | IRS Notice 2024-80 / Notice 2025-67 |
+| Catch-up 50+ / 60-63 | 7,500 / 11,250 | 8,000 / 11,250 | IRS Notice 2024-80 / Notice 2025-67 |
+| HSA self-only / family | 4,300 / 8,550 | 4,400 / 8,750 | Rev. Proc. 2024-25 / Rev. Proc. 2025-19 |
+| Health FSA salary reduction | 3,300 | 3,400 | Rev. Proc. 2024-40 / Rev. Proc. 2025-32 |
+| Dependent care (DCAP), MFS half | 5,000 | 7,500 | IRC §129(a)(2)(A); P.L. 119-21 from 2026 |
+| Additional Medicare threshold | 200k / 250k / 125k | same | IRC §3101(b)(2), §3102(f) |
+
+[Founder: confirm each figure against the published notices before release.]
+
+**Known limits.** Scanned stubs need OCR first. State taxes are passed through as printed,
+not checked. Dependent care above the limit and group-term life above $50,000 are not
+re-computed (the employer's own figures are used). Pay dates are assumed regular, with no extra
+off-cycle runs (bonuses).
