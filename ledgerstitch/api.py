@@ -1074,6 +1074,53 @@ def create_app(data_dir: Path | str = DEFAULT_DATA_DIR, token: str = "", *,
         return FileResponse(out, media_type=media, filename=name,
                             background=BackgroundTask(shutil.rmtree, tmp, ignore_errors=True))
 
+    # ------------------------------------------------------------------ investments (1099s, lot and
+    # positions CSVs; in memory only, like pay stubs)
+    async def investments_report(request: Request):
+        from .investments import FILING_STATUSES, analyze_investments
+        ws()
+        fields, files = await read_multipart(request)
+        if not files:
+            raise ApiError(422, "Attach at least one 1099, 1099-B CSV or positions CSV.")
+        fs = (fields.get("filing_status") or "").strip().lower() or None
+        if fs is not None and fs not in FILING_STATUSES:
+            raise ApiError(422, f"filing_status must be one of {', '.join(FILING_STATUSES)}.")
+        try:
+            year = int(fields["year"]) if (fields.get("year") or "").strip() else None
+        except ValueError:
+            raise ApiError(422, "year must be a number.")
+        items = [(Path(name).name, data) for _field, name, data in files]
+        try:
+            return await run_in_threadpool(analyze_investments, items, year=year, filing_status=fs)
+        except ValueError as e:
+            raise ApiError(422, str(e))
+
+    @app.post("/api/investments")
+    async def investments(request: Request):
+        """Multipart: ``file`` (repeatable), ``filing_status``, ``year``."""
+        return to_jsonable(await investments_report(request))
+
+    @app.post("/api/investments/export/{fmt}")
+    async def investments_export(fmt: str, request: Request):
+        if fmt not in ("csv", "xlsx"):
+            raise ApiError(404, "Unknown export format. Use csv or xlsx.")
+        report = await investments_report(request)
+        tmp = Path(tempfile.mkdtemp(prefix="ledgerstitch-export-"))
+        name = f"investments-{report.year or 'summary'}.{fmt}"
+        try:
+            if fmt == "csv":
+                from .reports.investments_export import export_investments_csv
+                out, media = export_investments_csv(report, tmp / name), "text/csv"
+            else:
+                from .reports.investments_export import export_investments_xlsx
+                out = export_investments_xlsx(report, tmp / name)
+                media = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        except BaseException:
+            shutil.rmtree(tmp, ignore_errors=True)
+            raise
+        return FileResponse(out, media_type=media, filename=name,
+                            background=BackgroundTask(shutil.rmtree, tmp, ignore_errors=True))
+
     # ------------------------------------------------------------------ receipts (stored ones;
     # reading new receipts is an add-on route, POST /api/receipts)
     @app.get("/api/receipts")

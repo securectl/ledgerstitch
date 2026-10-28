@@ -1,0 +1,9 @@
+Example Brokerage LLC 1099-B transaction detail,,,,,,,,,
+Account No. 900123456 - Tax Year 2025,,,,,,,,,
+Description,Symbol,Quantity,Date Acquired,Date Sold,Proceeds,Cost Basis,Wash Sale Loss Disallowed,Gain/Loss,Term,Covered
+EXAMPLE TECH CORP,EXTC,50,02/03/2025,06/10/2025,"6,250.00","5,000.00",0.00,"1,250.00",Short,Covered
+SAMPLE MOTORS INC,SMPM,20,03/01/2025,03/20/2025,"1,800.00","2,400.00",200.00,-400.00,Short,Covered
+LEGACY HOLDINGS CO,LGCY,100,Various,04/15/2025,"3,000.00",,0.00,,Short,Noncovered
+BROAD MARKET INDEX ETF,BMIX,30,05/02/2022,08/01/2025,"12,000.00","9,000.00",0.00,"3,000.00",Long,Covered
+ENERGY PIPELINE PARTNERS LP COMMON UNITS,EPPX,40,01/10/2023,09/05/2025,"2,000.00","1,600.00",0.00,400.00,Long,Covered
+Total,,,,,"25,050.00","18,000.00",200.00,"4,250.00",,

@@ -311,6 +311,10 @@ def test_ssn_removed_from_descriptors(raw):
     ("Employee ID: 00987654", "Employee ID: XXXX7654"),
     ("Company Code ZX/ABC 01234567", "Company Code ZX/ABC XXXX4567"),
     ("SSN: XXX-XX-1234", "SSN: XXX-XX-1234"),
+    # a labelled number stays on its line and stops at a wide gap (1099 statements)
+    ("Account 900345678\n\n1099-DIV", "Account XXXXX5678\n\n1099-DIV"),
+    ("Account No. 900123456    2025 Form", "Account No. XXXXX3456    2025 Form"),
+    ("Recipient TIN: XXX-XX-6789\n2025 Form 1099-DIV", "Recipient TIN: XXX-XX-6789\n2025 Form 1099-DIV"),
 ])
 def test_mask_identifiers(raw, expected):
     assert mask_identifiers(raw) == expected
