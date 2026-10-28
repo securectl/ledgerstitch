@@ -1,0 +1,56 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [4 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 5 0 R >>
+endobj
+5 0 obj
+<< /Length 3002 >>
+stream
+BT /F1 8 Tf 1 0 0 1 36.00 752.00 Tm (EARNINGS STATEMENT) Tj ET
+BT /F1 8 Tf 1 0 0 1 36.00 741.00 Tm (Acme Corp                         Pay period: 06/01/2025 - 06/15/2025) Tj ET
+BT /F1 8 Tf 1 0 0 1 36.00 730.00 Tm (100 Example Way, Springfield      Pay date: 06/15/2025) Tj ET
+BT /F1 8 Tf 1 0 0 1 36.00 719.00 Tm (Employee: Jane Doe                SSN: 900-45-6789) Tj ET
+BT /F1 8 Tf 1 0 0 1 36.00 708.00 Tm (Federal filing status: Single     Employee ID: 00987654) Tj ET
+BT /F1 8 Tf 1 0 0 1 36.00 686.00 Tm (EARNINGS                                RATE         HOURS       CURRENT           YTD) Tj ET
+BT /F1 8 Tf 1 0 0 1 36.00 675.00 Tm (Salary                                                          5,000.00     55,000.00) Tj ET
+BT /F1 8 Tf 1 0 0 1 36.00 664.00 Tm (Group Term Life                                                     4.50         49.50) Tj ET
+BT /F1 8 Tf 1 0 0 1 36.00 653.00 Tm (GROSS PAY                                                       5,004.50     55,049.50) Tj ET
+BT /F1 8 Tf 1 0 0 1 36.00 631.00 Tm (EMPLOYEE TAXES                                                   CURRENT           YTD) Tj ET
+BT /F1 8 Tf 1 0 0 1 36.00 620.00 Tm (Federal Income Tax                                                450.00      4,950.00) Tj ET
+BT /F1 8 Tf 1 0 0 1 36.00 609.00 Tm (Social Security                                                   280.83      3,089.13) Tj ET
+BT /F1 8 Tf 1 0 0 1 36.00 598.00 Tm (Medicare                                                           65.68        722.48) Tj ET
+BT /F1 8 Tf 1 0 0 1 36.00 587.00 Tm (IL State Income Tax                                               180.00      1,980.00) Tj ET
+BT /F1 8 Tf 1 0 0 1 36.00 565.00 Tm (DEDUCTIONS                      EMPLOYEE CURRENT    EMPLOYEE YTD   COMPANY CURRENT     COMPANY YTD) Tj ET
+BT /F1 8 Tf 1 0 0 1 36.00 554.00 Tm (401\(k\) Pre-Tax                            500.00        5,500.00            250.00        2,750.00) Tj ET
+BT /F1 8 Tf 1 0 0 1 36.00 543.00 Tm (Medical                                   200.00        2,200.00            600.00        6,600.00) Tj ET
+BT /F1 8 Tf 1 0 0 1 36.00 532.00 Tm (Dental                                     20.00          220.00             10.00          110.00) Tj ET
+BT /F1 8 Tf 1 0 0 1 36.00 521.00 Tm (Vision                                      5.00           55.00) Tj ET
+BT /F1 8 Tf 1 0 0 1 36.00 510.00 Tm (HSA                                       150.00        1,650.00             50.00          550.00) Tj ET
+BT /F1 8 Tf 1 0 0 1 36.00 499.00 Tm (Health FSA                                100.00        1,100.00) Tj ET
+BT /F1 8 Tf 1 0 0 1 36.00 488.00 Tm (Life Insurance                              8.00           88.00) Tj ET
+BT /F1 8 Tf 1 0 0 1 36.00 466.00 Tm (NET PAY                                                         3,040.49     33,445.39) Tj ET
+BT /F1 8 Tf 1 0 0 1 36.00 444.00 Tm (DIRECT DEPOSIT) Tj ET
+BT /F1 8 Tf 1 0 0 1 36.00 433.00 Tm (Checking  Account: 000123456789                                  3,040.49) Tj ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000210 00000 n 
+0000000336 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+3389
+%%EOF

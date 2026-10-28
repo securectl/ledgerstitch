@@ -5,7 +5,8 @@ import re
 
 import pytest
 
-from ledgerstitch.security.redact import PERSON, Redacted, payload_preview, redact, redact_batch
+from ledgerstitch.security.redact import (PERSON, Redacted, mask_identifiers, payload_preview, redact,
+                                          redact_batch)
 
 # --------------------------------------------------------------------------- exact outputs
 EXACT = [
@@ -286,3 +287,43 @@ def test_businesses_named_like_people_are_kept(raw):
 
 def test_first_and_surname_pair_mid_descriptor():
     assert redact("PAINTING BY MARK GREEN").text == "PAINTING BY <PERSON>"
+
+
+# ---------------------------------------------------------------- SSNs
+@pytest.mark.parametrize("raw", ["PAYROLL SSN 900-45-6789 ACME", "ACME CORP 900-45-6789", "SSN: 123456789 ACME",
+                                 "SOC SEC NO 123 45 6789 ACME"])
+def test_ssn_removed_from_descriptors(raw):
+    r = redact(raw)
+    assert not re.search(r"\d", r.text)
+    assert {"id", "digits"} & set(r.removed)
+    assert "6789" not in r.text and "123" not in r.text
+
+
+# ---------------------------------------------------------------- mask_identifiers (pay stubs, exports)
+@pytest.mark.parametrize("raw,expected", [
+    ("SSN: 900-45-6789", "SSN: XXX-XX-6789"),
+    ("Employee Jane Doe 900-45-6789 Acme", "Employee Jane Doe XXX-XX-6789 Acme"),
+    ("SSN 123456789", "SSN XXXXX6789"),
+    ("Social Security No. 987 65 4321", "Social Security No. XXX XX 4321"),
+    ("Account: 000123456789", "Account: XXXXXXXX6789"),
+    ("Acct # 1234 5678 9012", "Acct # XXXXXXXX9012"),
+    ("Routing Number 021000021", "Routing Number XXXXX0021"),
+    ("Employee ID: 00987654", "Employee ID: XXXX7654"),
+    ("Company Code ZX/ABC 01234567", "Company Code ZX/ABC XXXX4567"),
+    ("SSN: XXX-XX-1234", "SSN: XXX-XX-1234"),
+])
+def test_mask_identifiers(raw, expected):
+    assert mask_identifiers(raw) == expected
+    assert mask_identifiers(expected) == expected            # idempotent
+
+
+@pytest.mark.parametrize("raw", [
+    "Regular   98.9584   80.00   7 916 67   47 500 02",       # space-separated amounts survive
+    "Social Security Tax      -467 60      3 115 60",
+    "Social Security 310 00 1 550 00",
+    "Salary 5,000.00 105,000.00 Total 100000.00",
+    "Pay period: 01/01/2025 - 01/15/2025",
+    "Medicare 916 67 1234",
+])
+def test_mask_identifiers_keeps_amounts_and_dates(raw):
+    assert mask_identifiers(raw) == raw

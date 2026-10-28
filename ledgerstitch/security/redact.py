@@ -42,7 +42,8 @@ import re
 import unicodedata
 from dataclasses import dataclass, field
 
-__all__ = ["Redacted", "redact", "redact_batch", "payload_preview", "payload_object", "PERSON"]
+__all__ = ["Redacted", "redact", "redact_batch", "payload_preview", "payload_object", "PERSON",
+           "mask_identifiers"]
 
 PERSON = "<PERSON>"
 _GAP = " \x07 "          # internal "something was removed here" marker
@@ -210,6 +211,9 @@ _MASK_RE = re.compile(
     r"[X*•.\-]*\d+[X*\d]*"
     r"|[X*•]{2,}[\s-]?\d*|\.{2,}\d+|(?<![A-Z0-9])X{2,}(?![A-Z])"
 )
+# US Social Security / taxpayer ids: 900-45-6789, 123 45 6789 or 123456789 after an SSN label.
+_SSN_RE = re.compile(r"(?<![0-9-])\d{3}-\d{2}-\d{4}(?![0-9-])"
+                     r"|\b(?:SSN|SOC(?:IAL)?\s*SEC(?:URITY)?\s*(?:NO|NUMBER|#)?|TIN|ITIN)\.?\s*[:#]?\s*\d{3}\s?\d{2}\s?\d{4}\b")
 _REF_LABELS = (r"REF|REFERENCE|CONF|CONFIRMATION(?:\s+NUMBER)?|CONF\s+NUMBER|TRACE(?:\s+NUMBER)?|"
                r"TRN|TXN|TRANSACTION(?:\s+ID)?|AUTH(?:\s+CODE)?|AUTHORIZATION|APPROVAL(?:\s+CODE)?|"
                r"SEQ|SRF|IMAD|OMAD|ORDER|INVOICE|INV|RECEIPT|TICKET|CONTROL|SERIAL|CASE")
@@ -613,7 +617,8 @@ def _redact_once(description: str) -> Redacted:
     s = _DOMAIN_RE.sub(_dom, s)
     s = ctx.sub(_PHONE_RE, "phone", s)
 
-    # 3. Card / account masks, reference numbers, dates, amounts, addresses.
+    # 3. SSNs, card / account masks, reference numbers, dates, amounts, addresses.
+    s = ctx.sub(_SSN_RE, "id", s)
     s = ctx.sub(_MASK_RE, "id", s)
     s = ctx.sub(_REF_HASH_RE, "id", s)
     s = ctx.sub(_REF_PLAIN_RE, "id", s)
@@ -698,3 +703,48 @@ def payload_object(descriptors: list[str]) -> dict:
 def payload_preview(descriptors: list[str]) -> str:
     """Exact JSON string that would be sent: ``{"descriptors": [...]}``."""
     return json.dumps(payload_object(descriptors), ensure_ascii=True)
+
+
+# =========================================================================== identifier masking
+# For documents shown back to the user or exported (pay stubs), where amounts, dates and words
+# must survive: only taxpayer ids and account-like numbers are masked, keeping the last 4.
+
+# Unlabelled SSNs only in the dashed form: spaced digit groups are amounts on some pay stubs.
+_MASK_SSN_RE = re.compile(r"(?<![0-9A-Za-z-])(\d{3})(-)(\d{2})-(\d{4})(?![0-9-])")
+_MASK_LABELLED_RE = re.compile(
+    r"(?i)\b(SSN|SOC(?:IAL)?\.?\s*SEC(?:URITY)?\.?\s*(?:NO\.?|NUMBER|#)|TIN|ITIN|EIN|"
+    r"(?:BANK\s+)?ACCOUNT(?:\s*(?:NO|NUMBER|#))?|ACCT\.?(?:\s*(?:NO|NUMBER|#))?|A/C|ROUTING(?:\s*(?:NO|NUMBER|#))?|"
+    r"ABA|EMPLOYEE\s*(?:ID|NO|NUMBER|#)|EMP\.?\s*(?:ID|NO|#)|FILE\s*(?:NO|NUMBER|#)|ADVICE\s*(?:NO|NUMBER|#))"
+    r"(\.?\s*[:#]?\s*)([X*\d][X*\d\s-]{2,}[X*\d])")
+_MASK_LONG_DIGITS_RE = re.compile(r"(?<![\d.,/$-])\d{6,}(?![\d.,/])")
+
+
+def _keep_last4(raw: str) -> str:
+    digits = [c for c in raw if c.isdigit()]
+    tail = "".join(digits[-4:]) if len(digits) > 4 else ""
+    return "X" * max(4, len(raw.replace(" ", "")) - len(tail)) + tail if tail else "X" * max(4, len(raw.strip()))
+
+
+def mask_identifiers(text: str) -> str:
+    """Mask SSNs/TINs, account, routing and employee numbers in free text, keeping amounts.
+
+    ``900-45-6789`` becomes ``XXX-XX-6789``; a labelled number ("Account: 000123456789",
+    "SSN 123456789") keeps only its last 4 digits; any other run of 6+ digits that is not part
+    of an amount or date keeps its last 4. Already-masked ids (``XXX-XX-1234``) are unchanged.
+    Idempotent.
+    """
+    if not text:
+        return text
+    s = _MASK_SSN_RE.sub(lambda m: f"XXX{m.group(2)}XX{m.group(2)}{m.group(4)}", text)
+
+    def _labelled(m: re.Match) -> str:
+        val = m.group(3)
+        if sum(c.isdigit() for c in val) <= 4:
+            return m.group(0)
+        if re.fullmatch(r"\d{3}([- ]?)\d{2}\1\d{4}", val):
+            sep = re.sub(r"\d", "", val)[:1]
+            return m.group(1) + m.group(2) + f"XXX{sep}XX{sep}{val[-4:]}"
+        return m.group(1) + m.group(2) + _keep_last4(val)
+    s = _MASK_LABELLED_RE.sub(_labelled, s)
+    s = _MASK_LONG_DIGITS_RE.sub(lambda m: "X" * (len(m.group(0)) - 4) + m.group(0)[-4:], s)
+    return s
