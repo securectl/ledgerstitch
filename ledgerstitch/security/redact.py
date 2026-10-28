@@ -715,7 +715,7 @@ _MASK_LABELLED_RE = re.compile(
     r"(?i)\b(SSN|SOC(?:IAL)?\.?\s*SEC(?:URITY)?\.?\s*(?:NO\.?|NUMBER|#)|TIN|ITIN|EIN|"
     r"(?:BANK\s+)?ACCOUNT(?:\s*(?:NO|NUMBER|#))?|ACCT\.?(?:\s*(?:NO|NUMBER|#))?|A/C|ROUTING(?:\s*(?:NO|NUMBER|#))?|"
     r"ABA|EMPLOYEE\s*(?:ID|NO|NUMBER|#)|EMP\.?\s*(?:ID|NO|#)|FILE\s*(?:NO|NUMBER|#)|ADVICE\s*(?:NO|NUMBER|#))"
-    r"(\.?\s*[:#]?\s*)([X*\d][X*\d\s-]{2,}[X*\d])")
+    r"(\.?[ \t]*[:#]?[ \t]*)([X*\d](?:[X*\d-]|[ ](?=[X*\d])){2,}[X*\d])")   # one line, single spaces
 _MASK_LONG_DIGITS_RE = re.compile(r"(?<![\d.,/$-])\d{6,}(?![\d.,/])")
 
 

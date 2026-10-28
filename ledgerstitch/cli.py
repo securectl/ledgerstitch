@@ -8,6 +8,7 @@
     ledgerstitch vaults               # list vaults in the data dir
     ledgerstitch benchmark [--ai] [--out DIR]   # accuracy benchmark on the synthetic corpus
     ledgerstitch paystub FILE... [--owner you|spouse] [--spouse FILE] [--final] [--out w2.xlsx]
+    ledgerstitch investments FILE... [--filing-status mfj] [--json] [--out investments.xlsx]
     ledgerstitch --server [--host 0.0.0.0] [--port 8080] [--tls-cert C --tls-key K]   # self-hosted
     ledgerstitch admin-password       # set/reset the server-mode admin password
 
@@ -384,6 +385,63 @@ def cmd_paystub(args) -> int:
     return 0
 
 
+def cmd_investments(args) -> int:
+    """1099s, 1099-B lot CSVs and positions CSVs -> totals, holdings snapshot and signals. In memory."""
+    import json
+
+    from .investments import analyze_investments
+    from .store import to_jsonable
+    try:
+        files = [(Path(f).expanduser().name, Path(f).expanduser().read_bytes()) for f in args.files]
+        report = analyze_investments(files, year=args.year, filing_status=args.filing_status)
+    except (OSError, ValueError) as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 1
+    if args.out:
+        out = Path(args.out).expanduser()
+        if out.suffix.lower() == ".xlsx":
+            from .reports.investments_export import export_investments_xlsx
+            export_investments_xlsx(report, out)
+        else:
+            from .reports.investments_export import export_investments_csv
+            export_investments_csv(report, out)
+        print(f"Wrote {out} (plaintext - store it somewhere safe).", file=sys.stderr)
+    if args.json:
+        print(json.dumps(to_jsonable(report), indent=2))
+        return 0
+    print(report.label)
+    print(f"Tax year {report.year or 'unknown'}")
+    if report.income:
+        print("\n1099 income")
+        for t in report.income:
+            print(f"  {t.form:<9} box {t.box:<3} {t.label:<52}{_fmt_money(t.amount):>14}  -> {t.destination}")
+    if report.capital_gains:
+        print("\nCapital gains (Form 8949 / Schedule D)")
+        for g in report.capital_gains:
+            print(f"  box {g.category} {g.term:<8} proceeds {_fmt_money(g.proceeds):>14}  basis "
+                  f"{_fmt_money(g.cost_basis):>14}  net {_fmt_money(g.gain):>14}")
+        print(f"  net short-term {_fmt_money(report.short_term_net)}, net long-term {_fmt_money(report.long_term_net)}")
+    hs = report.holdings_summary
+    if hs:
+        print(f"\nHoldings: {hs.positions} positions, {_fmt_money(hs.market_value)}"
+              + (f" as of {hs.as_of.isoformat()}" if hs.as_of else ""))
+        print(f"  unrealized {_fmt_money(hs.unrealized_gain)} (losses {_fmt_money(hs.unrealized_losses)} in "
+              f"{hs.loss_positions} positions)")
+        print("  " + ", ".join(f"{a.name} {a.pct}%" for a in hs.by_class))
+        for a in hs.concentrated:
+            print(f"  concentrated: {a.name} is {a.pct}% of the portfolio")
+    if report.signals:
+        print("\nSignals")
+        for s in report.signals:
+            print(f"  [{s.severity}] {s.title}")
+            print(f"      {s.explanation} ({s.citation})")
+    for wn in report.warnings:
+        print(f"warning: {wn}", file=sys.stderr)
+    print(f"\nIn LedgerStitch Plus: {'; '.join(report.plus_features)}.")
+    print(report.disclaimer)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="ledgerstitch", description="Private, local expense consolidation.")
     p.add_argument("--version", action="version", version=f"ledgerstitch {__version__}")
@@ -450,6 +508,16 @@ def build_parser() -> argparse.ArgumentParser:
     pp.add_argument("--json", action="store_true", help="print the full result as JSON")
     pp.add_argument("--out", default=None, help="also write the estimate to a .csv or .xlsx file")
     pp.set_defaults(func=cmd_paystub)
+
+    pn = sub.add_parser("investments", parents=[common],
+                        help="1099s and positions -> income totals, capital gains, holdings and free signals")
+    pn.add_argument("files", nargs="+",
+                    help="1099 statements (text-based PDF or text), 1099-B lot CSVs or positions CSVs")
+    pn.add_argument("--filing-status", choices=["single", "mfj", "mfs", "hoh"], default=None)
+    pn.add_argument("--year", type=int, default=None, help="tax year to keep (default: the latest found)")
+    pn.add_argument("--json", action="store_true", help="print the full result as JSON")
+    pn.add_argument("--out", default=None, help="also write the summary to a .csv or .xlsx file")
+    pn.set_defaults(func=cmd_investments)
 
     # Add-ons (e.g. LedgerStitch Pro's `ai-test`) add their own subcommands.
     from . import plugins
