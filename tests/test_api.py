@@ -233,3 +233,51 @@ def test_auto_lock_after_idle(tmp_path):
         import time
         time.sleep(0.01)
         assert c.get("/api/transactions").status_code == 409
+
+
+# ---------------------------------------------------------------- pay stubs (in memory)
+def _stubs():
+    from pathlib import Path
+    fx = Path(__file__).parent / "fixtures"
+    return [("file", ("paystub_rippling.pdf", (fx / "paystub_rippling.pdf").read_bytes(), "application/pdf")),
+            ("file", ("paystub_generic.txt", (fx / "paystub_generic.txt").read_bytes(), "text/plain")),
+            ("spouse_file", ("paystub_adp.pdf", (fx / "paystub_adp.pdf").read_bytes(), "application/pdf"))]
+
+
+def test_paystubs_need_an_unlocked_vault(client):
+    r = client.post("/api/paystubs", files=_stubs()[:1])
+    assert r.status_code == 409 and r.json()["locked"] is True
+
+
+def test_paystubs_route(unlocked):
+    r = unlocked.post("/api/paystubs", files=_stubs(), data={"filing_status": "mfj"})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["label"] == "ESTIMATE — not issued by employer" and body["year"] == 2025
+    owners = sorted((w["owner"], w["employer"]) for w in body["w2"])
+    assert owners == [("spouse", "INITECH INC"), ("you", "Acme Corp"), ("you", "Globex LLC")]
+    acme = next(w for w in body["w2"] if w["employer"] == "Acme Corp")
+    assert acme["boxes"]["1"] == "96708.00" and acme["box12"]["D"] == "12000.00"
+    ids = {s["id"] for s in body["signals"]}
+    assert {"excess_social_security", "excess_deferral", "hsa_fsa_conflict",
+            "additional_medicare_not_withheld"} <= ids
+    for secret in ("900-45-6789", "987-65-4321", "000123456789", "9876543210"):
+        assert secret not in r.text
+    # nothing was stored
+    assert unlocked.get("/api/imports").json() == []
+
+
+def test_paystubs_route_validation(unlocked):
+    assert unlocked.post("/api/paystubs", files=_stubs()[:1], data={"owner": "boss"}).status_code == 422
+    assert unlocked.post("/api/paystubs", files=_stubs()[:1], data={"frequency": "daily"}).status_code == 422
+    assert unlocked.post("/api/paystubs", data={"owner": "you"}).status_code == 422
+
+
+def test_paystubs_export(unlocked):
+    r = unlocked.post("/api/paystubs/export/csv", files=_stubs(), data={"final": "1"})
+    assert r.status_code == 200 and r.headers["content-type"].startswith("text/csv")
+    assert r.text.startswith("ESTIMATE")
+    assert "900-45-6789" not in r.text
+    r = unlocked.post("/api/paystubs/export/xlsx", files=_stubs())
+    assert r.status_code == 200 and r.content[:2] == b"PK"
+    assert unlocked.post("/api/paystubs/export/pdf", files=_stubs()).status_code == 404
