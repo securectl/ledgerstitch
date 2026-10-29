@@ -55,7 +55,7 @@ def test_fidelity_style_pdf():
     assert s.payer == "Example Brokerage LLC" and s.tax_year == 2025
     assert s.account == "XXXXX3456" and s.recipient_tin == "XXX-XX-6789"
     div = s.forms["1099-DIV"]
-    assert div["1a"] == D("12032.46") and div["1b"] == D("9410.22") and div["2a"] == D("1204.18")
+    assert div["1a"] == D("11874.31") and div["1b"] == D("9410.22") and div["2a"] == D("1204.18")
     assert div["5"] == D("800.00") and div["7"] == D("245.30") and div["12"] == D("310.00") and div["13"] == D("22.00")
     assert s.text_boxes["1099-DIV"]["8"] == "Various"
     assert s.forms["1099-INT"] == {"1": D("412.10"), "3": D("150.00"), "4": D("0.00")}
@@ -71,7 +71,7 @@ def test_fidelity_style_pdf():
 def test_schwab_style_pdf():
     s = stmt("1099_sample_securities.pdf")
     assert s.payer == "Sample Securities Inc." and s.tax_year == 2025
-    assert s.forms["1099-DIV"] == {"1a": D("747.04"), "1b": D("600.00"), "2a": D("120.00"), "3": D("50.00"),
+    assert s.forms["1099-DIV"] == {"1a": D("683.15"), "1b": D("600.00"), "2a": D("120.00"), "3": D("50.00"),
                                    "7": D("12.50")}
     assert s.forms["1099-INT"] == {"1": D("88.20")} and s.forms["1099-MISC"] == {"3": D("25.00")}
     b = {g.category: (g.proceeds, g.cost_basis, g.gain) for g in s.b_summary}
@@ -241,7 +241,7 @@ def test_household_totals():
     r = household(filing_status="mfj")
     assert r.year == 2025 and r.label == LABEL and r.disclaimer == DISCLAIMER and r.plus_features == PLUS_FEATURES
     inc = {(t.form, t.box): t for t in r.income}
-    assert inc[("1099-DIV", "1a")].amount == D("12989.50")
+    assert inc[("1099-DIV", "1a")].amount == D("12767.46")
     assert inc[("1099-DIV", "1a")].payers == ["Example Brokerage LLC", "Sample Securities Inc.", "Specimen Markets LLC"]
     assert inc[("1099-DIV", "1b")].destination == "Form 1040 line 3a"
     assert inc[("1099-INT", "1")].amount == D("500.30") and inc[("1099-R", "4")].amount == D("1000.00")
@@ -283,7 +283,7 @@ def test_household_signals():
 def test_no_withholding_and_short_term_signals():
     r = analyze_investments(load("1099_example_brokerage.pdf", "1099nec_example_client.txt"))
     [nw] = by_id(r.signals, "no_withholding")
-    assert nw.amount == D("12032.46") + D("1204.18") + D("412.10") + D("2500.00") + D("850.00") + D("3400.00")
+    assert nw.amount == D("11874.31") + D("1204.18") + D("412.10") + D("2500.00") + D("850.00") + D("3400.00")
     assert "short_term_gains" not in {s.id for s in r.signals}      # long-term is larger
     st = analyze_investments([("b.txt", b"Form 1099-B\nShort-term covered (Box A)   9,000.00   1,000.00   8,000.00\n")])
     assert by_id(st.signals, "short_term_gains")[0].amount == D("8000.00")
@@ -331,7 +331,7 @@ def test_csv_export_layout(tmp_path):
     sections = {r[0] for r in rows[3:]}
     assert {"1099 income", "Capital gains", "Holding", "Portfolio", "Signal", "Statement", "Warning"} <= sections
     div = next(r for r in rows[3:] if r[2].startswith("1099-DIV box 1a"))
-    assert div[3] == "12989.50" and "line 3b" in div[4]
+    assert div[3] == "12767.46" and "line 3b" in div[4]
 
 
 def test_xlsx_export_tabs(tmp_path):

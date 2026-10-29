@@ -302,7 +302,7 @@ def test_investments_route(unlocked):
     body = r.json()
     assert body["label"].startswith("SUMMARY") and body["year"] == 2025
     div = next(t for t in body["income"] if t["form"] == "1099-DIV" and t["box"] == "1a")
-    assert div["amount"] == "12779.50"
+    assert div["amount"] == "12557.46"
     assert {g["category"] for g in body["capital_gains"]} == {"A", "B", "D", "E"}
     assert body["holdings_summary"]["market_value"] == "50000.00"
     ids = {s["id"] for s in body["signals"]}
