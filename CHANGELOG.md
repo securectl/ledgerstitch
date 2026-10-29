@@ -8,6 +8,24 @@ vault format, file formats or the plugin API; **MINOR** for new features; **PATC
 Each release's section is used as its GitHub release notes, so write for users, not for
 maintainers. Security fixes are listed under **Security** and announced in the advisory, too.
 
+## [Unreleased]
+
+### Added
+- **Incremental updates.** `ledgerstitch update` tells you whether a newer release is out and
+  how to update your kind of install. It makes one request to the GitHub releases API, only when
+  you run it, and sends nothing identifying; there are no automatic checks.
+  `sh scripts/update.sh` applies the update and changes only what changed:
+  - a one-line install reinstalls just LedgerStitch when the dependencies are unchanged;
+  - Docker rebuilds only when the image's source or dependency labels differ from the checkout,
+    and pulls `caddy`/`ollama` only when their registry digest changed;
+  - it backs up the data volume before recreating the container.
+  See docs/INSTALL.md, *Updating*.
+
+### Changed
+- **Docker image:** dependencies are installed in their own layer, so a code-only update
+  rebuilds in seconds. The Python base image is pinned by digest, and the image carries OCI
+  labels recording its source.
+
 ## [1.2.0] - 2026-10-19
 
 This repository's history starts at 1.2.0. Earlier release notes are kept below for reference.
