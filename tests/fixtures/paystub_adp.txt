@@ -6,14 +6,14 @@ Filing Status: Married filing jointly
 Social Security Number: 987-65-4321
 
 Earnings                        rate         hours   this period  year to date
-Regular                      98.9584         80.00      6 843 29     47 500 02
-Bonus                                                                 5 000 00
-            Gross Pay                                  $6 843 29     52 500 02
+Regular                      85.5411         80.00      6 843 29     47 500 02
+Bonus                                                                26 467 60
+            Gross Pay                                  $6 843 29     73 967 62
 
 Statutory Deductions                                 this period  year to date
 Federal Income Tax                                     -1 012 44      7 174 64
-Social Security Tax                                      -467 60      3 115 60
-Medicare Tax                                             -109 36        728 66
+Social Security Tax                                      -401 05      3 115 60
+Medicare Tax                                              -93 79        728 66
 CA State Income Tax                                      -380 11      2 280 66
 CA SDI Tax                                                -95 00        630 00
 
@@ -25,10 +25,10 @@ Dep Care FSA                                            -192 30*      1 153 80
 Wellness Plan                                             -10 00         60 00
 Life Ins                                                  -12 00         72 00
 
-            Net Pay                                    $4 904 38
+            Net Pay                                    $3 986 74
 
 * Excluded from federal taxable wages
-  Your federal taxable wages this period are $6,980.89
+  Your federal taxable wages this period are $5,981.13
 
 Net Pay Distribution
-  Checking1  Account Number 9876543210            $4,904.38
+  Checking1  Account Number 9876543210            $3,986.74
