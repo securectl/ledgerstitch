@@ -326,6 +326,29 @@ vault that holds no secrets and no financial data.
 
 ## 6. Updating
 
+**Quick reference** (your data folder and Docker volume are never removed):
+
+```bash
+# Docker: update to the latest (rebuilds only what changed, backs up the volume first)
+git pull && sh scripts/update.sh
+# Docker: full refresh, also picking up a patched Python base image
+sh scripts/update.sh --refresh-base
+# ...or by hand, with no cache at all
+cd docker && docker compose build --pull --no-cache && docker compose up -d
+
+# One-line installer: update (reinstalls only LedgerStitch if the dependencies are unchanged)
+sh scripts/update.sh
+# One-line installer: full refresh (re-resolves every dependency)
+sh install.sh
+
+# Any install: what would change, without changing anything
+sh scripts/update.sh --check
+ledgerstitch update            # Docker: docker compose exec ledgerstitch ledgerstitch update
+```
+
+After an update, reload the browser tab. New screens show up in every existing workspace; there
+is nothing to migrate.
+
 **Check first:** `ledgerstitch update` says which version you have, whether a newer release is
 out and how to update this kind of install. It changes nothing. The release check is a single
 HTTPS request to the public GitHub releases API, made only when you run the command. It sends no

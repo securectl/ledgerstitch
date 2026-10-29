@@ -48,9 +48,9 @@ def test_fixtures_match_generator():
 
 # --------------------------------------------------------------------------- amounts
 @pytest.mark.parametrize("line,values,stars", [
-    ("Regular   98.9584   80.00      6 843 29     47 500 02", ["80.00", "6843.29", "47500.02"], [0, 0, 0]),
+    ("Regular   85.5411   80.00      6 843 29     47 500 02", ["80.00", "6843.29", "47500.02"], [0, 0, 0]),
     ("401K Contrib            -487 36*      3 365 88", ["-487.36", "3365.88"], [1, 0]),
-    ("Gross Pay      $6 843 29     52 500 02", ["6843.29", "52500.02"], [0, 0]),
+    ("Gross Pay      $6 843 29     73 967 62", ["6843.29", "73967.62"], [0, 0]),
     ("Fed      1 234 567 89", ["1234567.89"], [0]),
     ("Salary      5,000.00   55,000.00", ["5000.00", "55000.00"], [0, 0]),
     ("Refund      (12.00)   15.00-", ["-12.00", "-15.00"], [0, 0]),
@@ -115,18 +115,18 @@ def test_adp_space_separated_amounts_and_stars():
     assert st.layout == "adp" and st.employer == "INITECH INC" and st.owner == "spouse"
     assert (st.period_start, st.period_end, st.pay_date) == (date(2025, 3, 1), date(2025, 3, 14), date(2025, 3, 21))
     assert st.filing_status == "married filing jointly"
-    assert (st.gross_current, st.gross_ytd) == (D("6843.29"), D("52500.02"))
+    assert (st.gross_current, st.gross_ytd) == (D("6843.29"), D("73967.62"))
     reg, bonus = st.earnings
     assert (reg.current, reg.ytd, reg.hours) == (D("6843.29"), D("47500.02"), D("80.00"))
-    assert (bonus.current, bonus.ytd) == (D("0"), D("5000.00"))          # YTD-only line
+    assert (bonus.current, bonus.ytd) == (D("0"), D("26467.60"))          # YTD-only line
     assert st.federal_income_tax.current == D("1012.44")                    # "-1 012 44" → positive tax
-    assert st.social_security.current == D("467.60") and st.medicare.ytd == D("728.66")
-    assert st.federal_taxable_current == D("6980.89")
+    assert st.social_security.current == D("401.05") and st.medicare.ytd == D("728.66")
+    assert st.federal_taxable_current == D("5981.13")
     d = {x.label: x for x in st.deductions}
     assert d["401K Contrib"].current == D("487.36") and d["401K Contrib"].pretax_source == "stub"
     assert d["Dep Care FSA"].kind == "dcap" and d["Dep Care FSA"].pretax
     assert d["Life Ins"].pretax is False
-    assert st.net_current == D("4904.38")
+    assert st.net_current == D("3986.74")
     assert "Checking1" not in {x.label for x in st.deductions}             # deposit section ignored
 
 
@@ -237,13 +237,13 @@ def test_w2_boxes_rippling():
 def test_w2_boxes_adp_caps_and_box10():
     w = estimate_w2(stub("paystub_adp.txt", "spouse"))
     assert w.periods_remaining == 20
-    assert w.boxes["1"] == D("186503.14")                    # 210,833.42 − 14,585.48 − 9,744.80
+    assert w.boxes["1"] == D("187975.54")                    # 210,833.42 − 13,113.08 − 9,744.80
     assert w.boxes["3"] == D("176100.00")                    # capped at the 2025 wage base
     assert w.boxes["4"] == LIMITS[2025].ss_max_tax == D("10918.20")
     assert w.boxes["5"] == D("201088.62")
     assert w.boxes["6"] == D("2925.58")                      # includes 0.9% over $200k
     assert w.boxes["10"] == D("4999.80")
-    assert w.box12 == {"D": D("14585.48")}
+    assert w.box12 == {"D": D("13113.08")}
     assert any("not derivable" in n for n in w.notes)        # no employer share → no DD
 
 
@@ -270,7 +270,7 @@ def test_402g_room_and_excess():
     (over,) = by_id(r.signals, "excess_deferral", "you")      # 12,000 pre-tax + 12,000 Roth
     assert over.amount == D("500.00") and "Notice 2024-80" in over.citation
     (room,) = by_id(r.signals, "deferral_room", "spouse")
-    assert room.amount == D("8914.52")                        # 23,500 − 14,585.48
+    assert room.amount == D("10386.92")                       # 23,500 − 13,113.08
 
 
 def test_hsa_fsa_conflict_and_limited_fsa():

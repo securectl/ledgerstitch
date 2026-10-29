@@ -80,9 +80,32 @@ instead, and Caddy gets a Let's Encrypt certificate. Server mode adds an admin s
 Local AI is included as a private `ollama` service: the 19 GB model downloads only after you agree in the setup wizard (give Docker ~24 GB RAM; skip it with `docker compose up -d ledgerstitch caddy`).
 See [docs/INSTALL.md](docs/INSTALL.md).
 
-**Update an existing install:** `ledgerstitch update` checks for a newer release, and
-`sh scripts/update.sh` applies it, rebuilding or reinstalling only what changed
-([Updating](docs/INSTALL.md#6-updating)).
+### Update or refresh an installed build
+
+Your data (vaults, receipts, backups) is never touched by an update. Run these from the
+LedgerStitch checkout you installed or built from.
+
+| You installed with | Update to the latest | Full refresh (rebuild everything) |
+|---|---|---|
+| Docker (`docker compose`) | `git pull && sh scripts/update.sh` | `sh scripts/update.sh --refresh-base`, or `cd docker && docker compose build --pull --no-cache && docker compose up -d` |
+| One-line installer (`install.sh`) | `sh scripts/update.sh` | `sh install.sh` (re-run it: same folders, re-resolves every dependency) |
+| Desktop app (DMG / Setup.exe) | Download the new version from [Releases](https://github.com/securectl/ledgerstitch/releases/latest) and install it over the old one | Same |
+| From source (`pip install -e`) | `git pull && .venv/bin/pip install -e ".[dev]"` | Delete `.venv` and repeat the *From source* steps |
+
+- **See what would change first:** `sh scripts/update.sh --check` (changes nothing), or
+  `ledgerstitch update` for the installed version, the latest release and the steps for your
+  install. In Docker: `docker compose exec ledgerstitch ledgerstitch update`.
+- **What the update does:** Docker rebuilds only when the code or dependencies changed (a
+  code-only change takes seconds), pulls `caddy`/`ollama` only when a new image is published,
+  backs up the data volume to `~/LedgerStitch-docker-backups/` and then restarts the containers.
+  The installer reinstalls only LedgerStitch when its dependencies are unchanged.
+- **After updating:** reload the browser tab (new screens appear in every existing workspace;
+  nothing to migrate). Check the version with `ledgerstitch --version` (Docker:
+  `docker compose exec ledgerstitch ledgerstitch --version`).
+- **Images you built by hand** (`docker compose build`) have no build labels, so the first
+  `update.sh` does one full rebuild; later updates are incremental.
+
+Details: [docs/INSTALL.md, Updating](docs/INSTALL.md#6-updating).
 
 **From source (Python 3.11+)**
 ```bash
