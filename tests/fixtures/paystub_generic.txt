@@ -1,0 +1,13 @@
+PAY STUB
+Employer: Globex LLC
+Employee: Jane Doe
+Pay Period: 2025-06-01 to 2025-06-30
+Pay Date: 2025-06-30
+
+Description                          Current           YTD
+Gross Pay                           9,000.00     54,000.00
+Federal Income Tax                  1,100.00      6,600.00
+Social Security                       558.00      3,348.00
+Medicare                              130.50        783.00
+Roth 401(k)                         1,000.00      6,000.00
+Net Pay                             6,211.50     37,269.00

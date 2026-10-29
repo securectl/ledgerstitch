@@ -194,13 +194,16 @@ The tests in `tests/test_rules.py` cover them.
 ---
 
 ## 5. What LedgerStitch does NOT do
-- It is **not tax preparation software**. It does not compute tax, produce IRS forms, or check for
-  completeness or eligibility.
+- It is **not tax preparation software**. It does not compute income tax, produce IRS forms, or
+  check for completeness or eligibility. The one exception to "no tax arithmetic" is the pay stub
+  tool (section 8): payroll projections (Social Security and Medicare at their statutory rates,
+  annual contribution limits) shown as an *estimate*, never income tax. The investments tool
+  (section 9) only adds up what payers reported on 1099s and labels where each total goes.
 - It does **not e-file** or submit anything to the IRS, any state, or anyone else.
 - It does **not give tax, legal or accounting advice**. Lanes, categories and Schedule C lines are
   suggestions for the user and their tax professional to review.
 - It does not track trips, compute depreciation or home office, value inventory (COGS),
-  handle accrual accounting, do payroll, or handle state-specific rules.
+  handle accrual accounting, run payroll, or handle state-specific rules.
 - It does not substantiate deductions. Receipts, logs and business-purpose notes are still needed.
 - It sees only the statements the user imports. Cash expenses, a missing account, or a statement for
   the wrong period produce incomplete totals.
@@ -236,3 +239,101 @@ The tests in `tests/test_rules.py` cover them.
     (rule, keyword, AI, you).
 15. Keep your own copy of the original statements and the export. LedgerStitch is not a records-retention
     system.
+
+## 8. Pay stubs: projection, estimated W-2 and payroll signals (`ledgerstitch/payroll/`)
+
+**Boundary.** The pay stub tool reads what an employer printed, projects it to December 31 and
+compares it with published payroll rates and limits. It computes **no income tax**: no taxable
+income, brackets, credits or refund. Every output is labelled **"ESTIMATE — not issued by
+employer"**; the employer's W-2 is the document of record. Stubs are parsed in memory and never
+stored. SSNs and account numbers are masked before parsing.
+
+**What it estimates.** W-2 boxes 1-6, 10, 12 (C group-term life, D/E/G pre-tax deferrals, AA/BB
+Roth, W HSA employee + employer, DD only when the stub shows the employer's medical share),
+13 (retirement plan) and an informational box 14 line for Sec. 125 benefits. Box 1 = gross −
+pre-tax retirement − Sec. 125 items; boxes 3/5 = gross − Sec. 125 items (box 3 capped at the wage
+base); box 6 includes the 0.9% employers withhold above $200,000. Projection = YTD + this period's
+amount × pay dates left in the year (by pay date, which is what the W-2 follows); `--final` takes
+YTD as the total.
+
+**Pre-tax inference.** Social Security tax / 6.2% should equal gross minus the Sec. 125
+deductions (medical, dental, vision, HSA, FSA, DCAP); 401(k) deferrals are still FICA wages.
+When the stub's flags don't add up and exactly one set of deductions makes the arithmetic work,
+that set is used and marked "inferred". ADP's "Your federal taxable wages this period" line is
+checked the same way. Otherwise the stub's flags stay and a warning is shown.
+
+**Signals** (dollar amount + explanation + citation): excess Social Security across two or more
+employers (claimed on Schedule 3); 402(g) deferral room or excess per person across employers
+(catch-up contributions are mentioned, not assumed: the stub has no age); HSA together with a
+health FSA not known to be limited-purpose (Pub. 969); HSA, health FSA and dependent care over
+the limit; dependent care benefits when the user says a spouse has no earned income (§129(b));
+Additional Medicare Tax not withheld when combined Medicare wages exceed $200,000 single /
+$250,000 MFJ / $125,000 MFS (Form 8959; informational). Household-level planning beyond these
+signals is out of scope for the Community core.
+
+**Limits table** (`payroll/limits.py`, re-check every year before release):
+
+| Item | 2025 | 2026 | Source |
+|---|---|---|---|
+| Social Security wage base | 176,100 | 184,500 | SSA COLA fact sheets |
+| 402(g) elective deferrals | 23,500 | 24,500 | IRS Notice 2024-80 / Notice 2025-67 |
+| Catch-up 50+ / 60-63 | 7,500 / 11,250 | 8,000 / 11,250 | IRS Notice 2024-80 / Notice 2025-67 |
+| HSA self-only / family | 4,300 / 8,550 | 4,400 / 8,750 | Rev. Proc. 2024-25 / Rev. Proc. 2025-19 |
+| Health FSA salary reduction | 3,300 | 3,400 | Rev. Proc. 2024-40 / Rev. Proc. 2025-32 |
+| Dependent care (DCAP), MFS half | 5,000 | 7,500 | IRC §129(a)(2)(A); P.L. 119-21 from 2026 |
+| Additional Medicare threshold | 200k / 250k / 125k | same | IRC §3101(b)(2), §3102(f) |
+
+[Founder: confirm each figure against the published notices before release.]
+
+**Known limits.** Scanned stubs need OCR first. State taxes are passed through as printed,
+not checked. Dependent care above the limit and group-term life above $50,000 are not
+re-computed (the employer's own figures are used). Pay dates are assumed regular, with no extra
+off-cycle runs (bonuses).
+
+## 9. Investments: 1099 import, holdings snapshot and signals (`ledgerstitch/investments/`)
+
+**Boundary.** The investments tool adds up what payers reported on 1099s and what a positions
+export says, and labels where each total goes on the return. It computes **no income tax**: no
+capital gain tax, no rate stacking, no credits. Outputs are labelled **"SUMMARY — totals from your
+1099s and statements; not a tax return"**; the payer's 1099 (often corrected through March) is
+the document of record. Files are parsed in memory and never stored. TINs (including EINs in the
+form `12-3456789`) and account numbers are masked before parsing.
+
+**Inputs** (recognized by content, not file name):
+- composite 1099 statements, text-based PDF or text (Fidelity-, Schwab- and Robinhood-style
+  layouts, plus a generic "label ... amount" fallback): 1099-DIV boxes 1a, 1b, 2a-2d, 3, 4, 5, 6,
+  7, 8 (country, text), 12, 13; 1099-INT 1, 2, 3, 4, 6, 8, 9; 1099-MISC 2, 3, 4; 1099-NEC 1, 4;
+  1099-R 1, 2a, 4, 7 (distribution code, text); the 1099-B summary per Form 8949 category (A-F,
+  X): proceeds, cost basis, accrued market discount, wash sale loss disallowed, net gain;
+- a 1099-B transaction CSV (one row per sale). Term comes from the term column, else from the
+  dates (more than one year = long); covered status from its column, else "basis present". When
+  the lots add up to a statement's 1099-B summary (proceeds per category within $1), they are the
+  same account and counted once;
+- a positions CSV (Fidelity, Schwab, Vanguard, Robinhood-style headers). Asset class is a guess
+  from the symbol, description and the export's type column.
+
+**Destinations** (informational): 1099-DIV 1a → Form 1040 line 3b, 1b → 3a, 2a → Schedule D
+line 13, 5 → Form 8995, 7 → Schedule 3 line 1, 12 → line 2a; 1099-INT 1 → line 2b, 8 → line 2a;
+1099-B box A/B/C → Schedule D lines 1a-1b/2/3, D/E/F → 8a-8b/9/10 through Form 8949; 1099-R 1/2a →
+lines 4a-4b or 5a-5b; any box 4 → line 25b. Net gain per category = proceeds − cost + market
+discount + wash sale disallowed (Form 8949 column g); a printed net that differs is kept and
+flagged.
+
+**Signals** (totals only, each with a citation): unrealized losses in the positions (sum and
+count; §1211(b) $3,000 / $1,500 MFS limit); 1099-B proceeds with no basis, and noncovered
+basis; wash sale losses the broker disallowed (§1091; brokers see one account only); foreign tax
+paid (credit, without Form 1116 up to $300 / $600 MFJ under §904(j)); Section 199A REIT
+dividends (20% of box 5, Form 8995); tax-exempt interest and its AMT part; nondividend
+distributions (basis reduction); a likely Schedule K-1 for partnership units; investment and
+1099 income of $1,000+ with nothing withheld (§6654 underpayment rules); net gains mostly short-term;
+a net capital loss above the yearly limit; a 1099-R with distribution code 1 (§72(t)).
+
+**Not in the Community core** (available in LedgerStitch Plus): FIFO / specific-lot gains from
+trade history, wash sale detection across accounts and a spouse's, the tax-loss harvesting plan
+with dates, target allocation, drift and rebalancing, and lot selection.
+
+**Known limits.** Scanned statements need OCR first (or use the broker's CSV download). Lot
+detail pages in PDFs are not read; use the 1099-B CSV. State boxes (14-16) and 1099-OID, 1099-K
+and K-1s are not read. Positions exports rarely carry purchase dates, so unrealized losses are not
+split into short- and long-term. [Founder: confirm the §904(j) and §199A thresholds each year.]
+
