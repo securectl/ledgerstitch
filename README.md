@@ -80,6 +80,10 @@ instead, and Caddy gets a Let's Encrypt certificate. Server mode adds an admin s
 Local AI is included as a private `ollama` service: the 19 GB model downloads only after you agree in the setup wizard (give Docker ~24 GB RAM; skip it with `docker compose up -d ledgerstitch caddy`).
 See [docs/INSTALL.md](docs/INSTALL.md).
 
+**Update an existing install:** `ledgerstitch update` checks for a newer release, and
+`sh scripts/update.sh` applies it, rebuilding or reinstalling only what changed
+([Updating](docs/INSTALL.md#6-updating)).
+
 **From source (Python 3.11+)**
 ```bash
 git clone https://github.com/securectl/ledgerstitch.git && cd ledgerstitch
