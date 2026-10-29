@@ -362,7 +362,7 @@ update_dev() {
   git_target "$ROOT"
   old_deps="$(git -C "$ROOT" show HEAD:pyproject.toml | deps_lines)"
   new_deps="$(git -C "$ROOT" show "$TARGET_REV:pyproject.toml" | deps_lines)"
-  [ "$old_deps" = "$new_deps" ] && note "dependencies: unchanged" || note "dependencies: changed -> reinstall"
+  if [ "$old_deps" = "$new_deps" ]; then note "dependencies: unchanged"; else note "dependencies: changed -> reinstall"; fi
   if [ "$CHECK" = 1 ]; then
     if [ "$HEAD_REV" != "$TARGET_REV" ]; then say "updates available"; exit 10; fi
     say "up to date"; exit 0
@@ -370,9 +370,9 @@ update_dev() {
   git_apply "$ROOT"
   [ "$old_deps" = "$new_deps" ] && { say "done (editable install: nothing to reinstall)"; return 0; }
   py="${LEDGERSTITCH_DEV_PYTHON:-$ROOT/.venv/bin/python}"
-  [ -x "$py" ] || die "no Python at $py; reinstall with: pip install -e '$ROOT[dev]' (or set LEDGERSTITCH_DEV_PYTHON)"
-  if find_uv; then "$UV" pip install -q --python "$py" -e "$ROOT[dev]"
-  else "$py" -m pip install -q -e "$ROOT[dev]"; fi
+  [ -x "$py" ] || die "no Python at $py; reinstall with: pip install -e '${ROOT}[dev]' (or set LEDGERSTITCH_DEV_PYTHON)"
+  if find_uv; then "$UV" pip install -q --python "$py" -e "${ROOT}[dev]"
+  else "$py" -m pip install -q -e "${ROOT}[dev]"; fi
   say "done (dependencies reinstalled)"
 }
 
