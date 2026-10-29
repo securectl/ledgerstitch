@@ -11,6 +11,7 @@
     ledgerstitch investments FILE... [--filing-status mfj] [--json] [--out investments.xlsx]
     ledgerstitch --server [--host 0.0.0.0] [--port 8080] [--tls-cert C --tls-key K]   # self-hosted
     ledgerstitch admin-password       # set/reset the server-mode admin password
+    ledgerstitch update [--offline] [--json]   # is a newer release out, and how to update this install
 
 The desktop/local server binds to 127.0.0.1 only and uses a fresh random token per launch.
 Server mode (``--server`` or LEDGERSTITCH_SERVER=1) binds 0.0.0.0, requires an admin
@@ -442,6 +443,39 @@ def cmd_investments(args) -> int:
     return 0
 
 
+def cmd_update(args) -> int:
+    """Report whether a newer release exists and what updating this install takes. Changes nothing;
+    scripts/update.sh applies the update. The only network call is one GET to the releases API."""
+    import json
+    from dataclasses import asdict
+
+    from . import updater
+    if args.compare_source:
+        try:
+            print(json.dumps(updater.compare_source(Path(args.compare_source).expanduser())))
+        except ValueError as e:
+            print(f"error: {e}", file=sys.stderr)
+            return 1
+        return 0
+    rep = updater.check(offline=args.offline)
+    if args.json:
+        print(json.dumps(asdict(rep), indent=2))
+        return 0 if rep.error is None else 1
+    print(f"LedgerStitch {rep.installed} ({rep.kind} install)")
+    if rep.error:
+        print(f"Couldn't check for updates: {rep.error}", file=sys.stderr)
+    elif rep.latest is not None:
+        if rep.update_available:
+            print(f"Update available: {rep.latest.version} ({rep.latest.url})")
+        else:
+            print(f"Up to date (latest release: {rep.latest.version})")
+    if rep.update_available or args.offline or rep.error:
+        print("To update:")
+        for line in rep.how:
+            print(f"  {line}")
+    return 0 if rep.error is None else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="ledgerstitch", description="Private, local expense consolidation.")
     p.add_argument("--version", action="version", version=f"ledgerstitch {__version__}")
@@ -518,6 +552,15 @@ def build_parser() -> argparse.ArgumentParser:
     pn.add_argument("--json", action="store_true", help="print the full result as JSON")
     pn.add_argument("--out", default=None, help="also write the summary to a .csv or .xlsx file")
     pn.set_defaults(func=cmd_investments)
+
+
+    pu = sub.add_parser("update", parents=[common],
+                        help="check for a newer release and show how to update this install (changes nothing)")
+    pu.add_argument("--offline", action="store_true", help="don't contact the release server; just show how to update")
+    pu.add_argument("--json", action="store_true", help="print the result as JSON")
+    pu.add_argument("--compare-source", metavar="CHECKOUT", default=None,
+                    help=argparse.SUPPRESS)  # used by scripts/update.sh: no-deps or full reinstall?
+    pu.set_defaults(func=cmd_update)
 
     # Add-ons (e.g. LedgerStitch Pro's `ai-test`) add their own subcommands.
     from . import plugins

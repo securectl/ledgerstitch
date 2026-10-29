@@ -14,6 +14,7 @@ encrypted with its own passphrase.
 
 On first launch a short **setup wizard** opens: privacy promise, a system check, an optional
 local AI install, then your first encrypted vault. See [First-run setup](#4-first-run-setup).
+Already installed? See [Updating](#6-updating): it changes only what changed.
 
 ---
 
@@ -112,8 +113,9 @@ The matching environment variables are `LEDGERSTITCH_PREFIX`, `LEDGERSTITCH_BIN_
 `LEDGERSTITCH_APPS_DIR`, `LEDGERSTITCH_NO_APP`, `LEDGERSTITCH_SOURCE`, `LEDGERSTITCH_PYTHON`
 (default 3.12) and `LEDGERSTITCH_DATA_DIR`.
 
-- **Upgrade:** run the same command again. The venv is reused and LedgerStitch is upgraded in
-  place. Your data folder is never touched.
+- **Upgrade:** `sh scripts/update.sh` from the checkout reinstalls only LedgerStitch when the
+  dependencies haven't changed (see [Updating](#6-updating)). Running the install command again
+  also works: the venv is reused and everything is re-resolved. Your data folder is never touched.
 - **Uninstall:** `sh install.sh --uninstall` (Windows: `install.ps1 -Uninstall`). This
   removes the venv, the command and the launcher, and **keeps** `~/LedgerStitch`. To delete
   your data as well, add `--purge-data` (it asks first; `--yes` skips the question). uv and its
@@ -255,6 +257,8 @@ Without Docker it's the same: `ledgerstitch --server --tls-cert C --tls-key K`.
   vaults, `app.json` and `server/admin.json`.
 - **Local AI** in server mode uses the compose `ollama` service (see *Local AI* above). The setup
   wizard never installs software on a server; it only asks the service to download the model.
+- **Update:** `sh scripts/update.sh --check`, then `sh scripts/update.sh` from the checkout. It
+  rebuilds only what changed and backs up the data volume first. See [Updating](#6-updating).
 - **Uninstall:** `docker compose down` keeps the volumes. `docker compose down -v` deletes them,
   **including your encrypted vaults** and the downloaded model.
 
@@ -315,3 +319,97 @@ vault that holds no secrets and no financial data.
 | Docker: "Too many attempts" on sign-in | Wait 15 minutes, or restart the container. |
 | Docker: lost the admin password | `docker compose exec -it ledgerstitch ledgerstitch admin-password`. Your vaults are unaffected. |
 | Docker: "Invalid Host header" | Add your host name to `LEDGERSTITCH_ALLOWED_HOSTS` (or `LEDGERSTITCH_DOMAIN`). |
+| `update.sh`: "local changes to tracked files" | Commit or `git stash` them. Put your own compose settings in `docker/docker-compose.override.yml` instead; `--force` skips the check. |
+| `update.sh`: "can't fast-forward" | You have local commits on the branch. Rebase them onto the upstream, or pass `--ref <tag>`. |
+
+---
+
+## 6. Updating
+
+**Check first:** `ledgerstitch update` says which version you have, whether a newer release is
+out and how to update this kind of install. It changes nothing. The release check is a single
+HTTPS request to the public GitHub releases API, made only when you run the command. It sends no
+version, install ID or data. LedgerStitch never checks for updates by itself. With `--offline`
+it skips the request and only prints the instructions; `--json` is for scripts.
+
+**Apply:** from a LedgerStitch checkout, `sh scripts/update.sh --check` shows the plan (exit
+status 10 when an update is available, 0 when everything is current), and `sh scripts/update.sh`
+applies it. It detects the install kind; pass `--native`, `--docker` or `--dev` when more than one
+is present.
+
+### Desktop app
+
+Download the new DMG or Setup.exe from the
+[releases page](https://github.com/securectl/ledgerstitch/releases/latest) and install it over the
+old one. Your data folder is kept.
+
+### One-line installer (`--native`)
+
+1. The checkout the installer used (`source=` in `install-manifest.txt`) is fast-forwarded to its
+   upstream branch, or to `--ref <tag>`.
+2. The installed package's dependencies (`Requires-Dist`) are compared with the checkout's
+   `pyproject.toml`:
+   - **unchanged:** only LedgerStitch is reinstalled (`uv pip install --no-deps`). This takes
+     seconds and downloads nothing;
+   - **changed:** `install.sh` runs again with the same prefix, launchers and `--extra` add-ons.
+3. The manifest records the installed source tree (`src_sha=`), so the next run says "up to date"
+   without reinstalling.
+
+An install from PyPI or a git URL has no checkout to compare with. Re-run the original install
+command; it re-resolves everything.
+
+### Docker (`--docker`)
+
+The image built by `update.sh` carries labels with what it was built from:
+
+| Label | Value |
+|---|---|
+| `io.ledgerstitch.src-sha` | git tree hash of `ledgerstitch/` |
+| `io.ledgerstitch.deps-sha` | SHA-256 of the `[project]` dependency list plus the Dockerfile |
+| `io.ledgerstitch.base-pin` / `org.opencontainers.image.base.name` | the pinned Python base, and the base actually used |
+| `org.opencontainers.image.revision` / `.version` | the commit and the version |
+
+`update.sh` computes the same values for the target commit **without checking it out** and
+compares them with `docker image inspect`:
+
+| Result | What happens |
+|---|---|
+| Labels match | No build. A version-only change also lands here. |
+| Only the app code changed | Rebuild. The dependency layer comes from the cache, so only LedgerStitch is reinstalled (seconds). |
+| Dependencies or the Dockerfile changed | Rebuild including the dependency layer. |
+| The image predates these labels | One full rebuild; later updates are incremental. |
+
+- **Base image.** The Python base is pinned by digest in `docker/Dockerfile`. When Docker Hub
+  has a newer digest for the same tag (security patches), `update.sh` reports it, and
+  `--refresh-base` rebuilds on it with `--pull`. A refreshed base is kept on later rebuilds until
+  the Dockerfile pins a different one.
+- **Pulled images** (`caddy`, `ollama`): the local `RepoDigests` are compared with the
+  registry's current digest (`docker buildx imagetools inspect`). Only images that differ are
+  pulled. Images you never pulled (for example `ollama` when you run without local AI) are skipped.
+- **Backup first.** Before the LedgerStitch container is recreated, the `ledgerstitch-data` volume
+  is copied, read-only and with no network, to
+  `~/LedgerStitch-docker-backups/ledgerstitch-data-<UTC time>.tar.gz` (mode 600; set
+  `LEDGERSTITCH_BACKUP_DIR` to change the folder). The vaults inside stay encrypted with their
+  passphrases. `--no-backup` skips it. If the backup fails, nothing is changed.
+- **Only running services are recreated** (`docker compose up -d --no-deps <running services>`).
+  Volumes are never removed.
+- **Local changes:** the update refuses to run while tracked files have local edits, except
+  `docker/docker-compose.yml`, `docker/Caddyfile` and `docker/docker-compose.override.yml`. Keep
+  your own settings in the override file, which `docker compose` reads automatically. `--force`
+  skips the check.
+
+Built by hand (`docker compose build`) instead? That works too. The image then has no labels,
+and the next `update.sh` does one full rebuild.
+
+### Dev checkout (`--dev`)
+
+`git pull --ff-only`. The dependencies are reinstalled (`pip install -e ".[dev]"`, into `.venv` or
+`LEDGERSTITCH_DEV_PYTHON`) only if `pyproject.toml` changed them.
+
+### Proposed: data-only updates
+
+Some updates change only data: statement formats (`ingest/data/known_formats.json`), payroll
+limits and tax-year constants. A future **data pack** channel could deliver those files without
+a code update: a versioned bundle on the release, signed, checked against a key that ships in
+the app, and stored next to the vaults. It isn't built yet, because signed releases (and so a
+signing key) come first. Until then, data changes arrive with a normal update.

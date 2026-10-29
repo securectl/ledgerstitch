@@ -38,6 +38,21 @@ maintainers. Security fixes are listed under **Security** and announced in the a
   short-term gains, the capital loss limit and early retirement distributions. No income tax is
   computed (docs/TAX_NOTES.md section 9).
 
+- **Incremental updates.** `ledgerstitch update` tells you whether a newer release is out and
+  how to update your kind of install. It makes one request to the GitHub releases API, only when
+  you run it, and sends nothing identifying; there are no automatic checks.
+  `sh scripts/update.sh` applies the update and changes only what changed:
+  - a one-line install reinstalls just LedgerStitch when the dependencies are unchanged;
+  - Docker rebuilds only when the image's source or dependency labels differ from the checkout,
+    and pulls `caddy`/`ollama` only when their registry digest changed;
+  - it backs up the data volume before recreating the container.
+  See docs/INSTALL.md, *Updating*.
+
+### Changed
+- **Docker image:** dependencies are installed in their own layer, so a code-only update
+  rebuilds in seconds. The Python base image is pinned by digest, and the image carries OCI
+  labels recording its source.
+
 ### Security
 - `security.redact.mask_identifiers` masks SSNs, account, routing and employee numbers (last 4
   kept) in documents shown back to the user. AI descriptor redaction now also removes SSNs.
