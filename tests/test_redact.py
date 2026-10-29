@@ -322,8 +322,8 @@ def test_mask_identifiers(raw, expected):
 
 
 @pytest.mark.parametrize("raw", [
-    "Regular   98.9584   80.00   7 916 67   47 500 02",       # space-separated amounts survive
-    "Social Security Tax      -467 60      3 115 60",
+    "Regular   85.5411   80.00   6 843 29   47 500 02",       # space-separated amounts survive
+    "Social Security Tax      -401 05      3 115 60",
     "Social Security 310 00 1 550 00",
     "Salary 5,000.00 105,000.00 Total 100000.00",
     "Pay period: 01/01/2025 - 01/15/2025",

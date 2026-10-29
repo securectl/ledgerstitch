@@ -6,7 +6,7 @@ One layout-generic parser handles the common pay stub families:
 * **Rippling-style** "EARNINGS STATEMENT": sections EARNINGS / EMPLOYEE TAXES / DEDUCTIONS with
   CURRENT and YTD columns, plus EMPLOYEE and COMPANY contribution columns on deductions;
 * **ADP-style**: rate / hours / this period / year to date, amounts sometimes printed with
-  spaces instead of separators (``7 916 67`` = 7,916.67, ``-560 98`` = -560.98), ``*`` marking
+  spaces instead of separators (``6 843 29`` = 6,843.29, ``-487 36`` = -487.36), ``*`` marking
   deductions "Excluded from federal taxable wages", and the line "Your federal taxable wages
   this period are $X";
 * **generic** fallback: a label followed by current and YTD amounts.
@@ -193,7 +193,7 @@ def parse_amounts(line: str) -> tuple[list[_Amt], int]:
     """Money amounts on a text line, and the column where the first number starts.
 
     Understands ``1,234.56``, ``-1,234.56``, ``(12.00)``, ``$5.00``, ``12.00-`` and the
-    space-separated form ``7 916 67`` / ``-560 98`` (groups one space apart, cents last).
+    space-separated form ``6 843 29`` / ``-487 36`` (groups one space apart, cents last).
     A trailing ``*`` sets ``star`` (ADP: excluded from federal taxable wages)."""
     toks = _tokens(line)
     out: list[_Amt] = []

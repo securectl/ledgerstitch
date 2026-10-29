@@ -9,7 +9,7 @@ byte-for-byte deterministic), so the test suite can check the committed files ar
 
 Layouts:
 * paystub_rippling.pdf  Rippling-style EARNINGS STATEMENT, semi-monthly, CURRENT/YTD and COMPANY columns
-* paystub_adp.pdf       ADP-style, biweekly, space-separated amounts ("7 916 67"), "*" pre-tax marks
+* paystub_adp.pdf       ADP-style, biweekly, space-separated amounts ("6 843 29"), "*" pre-tax marks
 * paystub_adp.txt       the same ADP stub as plain text
 * paystub_generic.txt   generic "label  current  YTD", monthly, second employer of the same person
 """
@@ -73,32 +73,32 @@ ADP = "\n".join([
     "Social Security Number: 987-65-4321",
     "",
     _row("Earnings", "rate", "hours", "this period", "year to date", first=22),
-    _row("Regular", "98.9584", "80.00", "7 916 67", "47 500 02", first=22),
-    _row("Bonus", "", "", "", "5 000 00", first=22),
-    _row("            Gross Pay", "", "", "$7 916 67", "52 500 02", first=22),
+    _row("Regular", "85.5411", "80.00", "6 843 29", "47 500 02", first=22),
+    _row("Bonus", "", "", "", "26 467 60", first=22),
+    _row("            Gross Pay", "", "", "$6 843 29", "73 967 62", first=22),
     "",
     _row("Statutory Deductions", "", "", "this period", "year to date", first=22),
     _row("Federal Income Tax", "", "", "-1 012 44", "7 174 64", first=22),
-    _row("Social Security Tax", "", "", "-467 60", "3 115 60", first=22),
-    _row("Medicare Tax", "", "", "-109 36", "728 66", first=22),
+    _row("Social Security Tax", "", "", "-401 05", "3 115 60", first=22),
+    _row("Medicare Tax", "", "", "-93 79", "728 66", first=22),
     _row("CA State Income Tax", "", "", "-380 11", "2 280 66", first=22),
     _row("CA SDI Tax", "", "", "-95 00", "630 00", first=22),
     "",
     "Other",
-    _row("401K Contrib", "", "", "-560 98*", "3 365 88", first=22),
+    _row("401K Contrib", "", "", "-487 36*", "3 365 88", first=22),
     _row("Dental", "", "", "-22 50*", "135 00", first=22),
     _row("Medical", "", "", "-150 00*", "900 00", first=22),
     _row("Dep Care FSA", "", "", "-192 30*", "1 153 80", first=22),
     _row("Wellness Plan", "", "", "-10 00", "60 00", first=22),
     _row("Life Ins", "", "", "-12 00", "72 00", first=22),
     "",
-    _row("            Net Pay", "", "", "$4 904 38", "", first=22),
+    _row("            Net Pay", "", "", "$3 986 74", "", first=22),
     "",
     "* Excluded from federal taxable wages",
-    "  Your federal taxable wages this period are $6,980.89",
+    "  Your federal taxable wages this period are $5,981.13",
     "",
     "Net Pay Distribution",
-    "  Checking1  Account Number 9876543210            $4,904.38",
+    "  Checking1  Account Number 9876543210            $3,986.74",
 ])
 
 GENERIC = "\n".join([

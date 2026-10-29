@@ -31,7 +31,7 @@ estimated W-2. It doesn't store them (see TAX_NOTES.md section 8).
 | Layout | Recognized by | Notes |
 |---|---|---|
 | Rippling-style | "EARNINGS STATEMENT", EMPLOYEE TAXES, CURRENT / YTD columns | EMPLOYEE and COMPANY contribution columns on DEDUCTIONS rows |
-| ADP-style | "this period" / "year to date", Statutory Deductions, Period Starting / Ending | space-separated amounts (`7 916 67`, `-560 98`); `*` = excluded from federal taxable wages; "Your federal taxable wages this period are $X" is cross-checked |
+| ADP-style | "this period" / "year to date", Statutory Deductions, Period Starting / Ending | space-separated amounts (`6 843 29`, `-487 36`); `*` = excluded from federal taxable wages; "Your federal taxable wages this period are $X" is cross-checked |
 | Generic | any "label  current  YTD" table, with or without a header row | the last two amounts on a line are current and YTD |
 
 Input: text-based PDFs (rendered to fixed-column text with pdfplumber, the statement parser's
