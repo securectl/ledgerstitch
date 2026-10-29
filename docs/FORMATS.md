@@ -39,6 +39,21 @@ library) or plain text. SSNs, account, routing and employee numbers are masked
 (`security.redact.mask_identifiers`, last 4 kept) before parsing, so no output carries them.
 Fixtures: `tests/fixtures/make_paystubs.py` (synthetic, deterministic).
 
+### 1099s and positions (`investments/`)
+
+Like pay stubs, these don't go into the ledger: `investments.analyze_investments(...)` (CLI
+`ledgerstitch investments`, API `POST /api/investments`) reads them in memory and returns totals,
+a holdings snapshot and signals (TAX_NOTES.md section 9). Each file's kind comes from its content.
+
+| Input | Recognized by | Notes |
+|---|---|---|
+| Composite 1099 (PDF with text, or text) | a "1099-DIV / INT / B / MISC / NEC / R" heading | a box is read by its number (`1a`, `Box 1a -`, `1a-`) or its label; the 1099-B summary is one row per Form 8949 box (letter, or "short-term ... covered / noncovered"), columns matched to the header by right edge |
+| 1099-B transaction CSV | a header with Proceeds and Date Sold or Cost Basis | term from the column or the dates; covered from the column or basis present; a lot file matching a PDF summary is counted once |
+| Positions CSV | a header with Symbol or Description and Value or Quantity (no Proceeds) | Fidelity, Schwab (preamble line, `$`, `--`, Account Total row), Vanguard, Robinhood-style; value = quantity × price when missing |
+
+TINs, EINs and account numbers are masked (last 4 kept) before parsing. Fixtures:
+`tests/fixtures/make_1099s.py` (synthetic, deterministic).
+
 ### Payment platforms and fintech ledgers (`ingest/platforms.py`)
 Selected by the catalog id. Without these rules a plain import double-counts income
 (the platform charge *and* the bank deposit of the payout) and hides fees.

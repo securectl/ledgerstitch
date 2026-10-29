@@ -52,6 +52,7 @@ ledgerstitch/
   reports/csv_export.py           # Reporting engineer
   reports/quickbooks.py           # Reporting engineer
   payroll/                        # pay stubs → estimated W-2 + payroll signals (Tax/Accounting lead)
+  investments/                    # 1099s + positions → totals, holdings snapshot, signals (Tax/Accounting lead)
   store.py                        # Backend engineer
   api.py                          # Backend engineer
   cli.py, __main__.py             # Backend engineer
@@ -215,6 +216,23 @@ def analyze_paystubs(files: list[tuple[str, bytes, str]],     # (filename, data,
 Payroll arithmetic only, no income tax (docs/TAX_NOTES.md section 8). Identifiers are masked with
 `security.redact.mask_identifiers` before parsing.
 
+### 4.6b investments (1099s and positions; in memory, never stored)
+```python
+# investments/__init__.py
+def analyze_investments(files: list[tuple[str, bytes]],      # (filename, data); kind detected from content
+                        year=None, filing_status=None) -> InvestmentReport
+    # statements, income (per form/box, with destination), capital_gains (per Form 8949 box),
+    # holdings, holdings_summary, signals, warnings, label, plus_features
+# investments/forms1099.py  parse_1099(filename, data) -> Statement1099   (DIV/INT/B/MISC/NEC/R)
+#                           parse_lots_csv(filename, data) -> Statement1099 (1099-B lots)
+# investments/holdings.py   parse_positions_csv(filename, data) -> (holdings, as_of, warnings)
+#                           summarize_holdings(holdings) -> HoldingsSummary (allocation, concentration)
+# investments/signals.py    investment_signals(...) -> list[Signal]   (payroll.signals.Signal)
+# reports/investments_export.py  export_investments_csv / export_investments_xlsx
+```
+Reported figures only, no income tax (docs/TAX_NOTES.md section 9). Lot matching, cross-account
+wash sales, harvesting and rebalancing belong to LedgerStitch Plus.
+
 ### 4.7 store.py
 `Workspace` wraps an open `Vault`; holds accounts, transactions, rules, settings, imports in memory,
 persists via `vault.put_json("transactions", ...)` etc. Methods: `add_import(filename, data) -> ImportResult`,
@@ -251,6 +269,10 @@ POST /api/license {key}
 POST /api/paystubs (multipart file[], spouse_file[], owner?, final?, frequency?, filing_status?,
                     spouse_no_earned_income?, year?)   -> {stubs, w2, signals, warnings, label}  # not stored
 POST /api/paystubs/export/{csv|xlsx}  (same form)    -> file download, labelled ESTIMATE
+POST /api/investments (multipart file[], filing_status?, year?)
+                                   -> {statements, income, capital_gains, holdings, holdings_summary,
+                                       signals, warnings, label}               # not stored
+POST /api/investments/export/{csv|xlsx}  (same form) -> file download, labelled SUMMARY
 ```
 
 ### 4.9 Frontend (vanilla JS, no build, no third-party scripts/fonts — CSP `default-src 'self'`)

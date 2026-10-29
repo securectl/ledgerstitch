@@ -281,3 +281,48 @@ def test_paystubs_export(unlocked):
     r = unlocked.post("/api/paystubs/export/xlsx", files=_stubs())
     assert r.status_code == 200 and r.content[:2] == b"PK"
     assert unlocked.post("/api/paystubs/export/pdf", files=_stubs()).status_code == 404
+
+
+def _investment_files():
+    from pathlib import Path
+    fx = Path(__file__).parent / "fixtures"
+    return [("file", (n, (fx / n).read_bytes(), "application/octet-stream"))
+            for n in ("1099_example_brokerage.pdf", "1099_sample_securities.pdf", "1099b_lots_example.csv",
+                      "positions_example.csv")]
+
+
+def test_investments_need_an_unlocked_vault(client):
+    r = client.post("/api/investments", files=_investment_files()[:1])
+    assert r.status_code == 409 and r.json()["locked"] is True
+
+
+def test_investments_route(unlocked):
+    r = unlocked.post("/api/investments", files=_investment_files(), data={"filing_status": "mfj"})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["label"].startswith("SUMMARY") and body["year"] == 2025
+    div = next(t for t in body["income"] if t["form"] == "1099-DIV" and t["box"] == "1a")
+    assert div["amount"] == "12779.50"
+    assert {g["category"] for g in body["capital_gains"]} == {"A", "B", "D", "E"}
+    assert body["holdings_summary"]["market_value"] == "50000.00"
+    ids = {s["id"] for s in body["signals"]}
+    assert {"unrealized_losses", "basis_missing", "partnership_k1_likely"} <= ids
+    for secret in ("900-45-6789", "98-7654321", "900123456", "900-234567", "Z90012345"):
+        assert secret not in r.text
+    assert unlocked.get("/api/imports").json() == []
+
+
+def test_investments_route_validation(unlocked):
+    assert unlocked.post("/api/investments", files=_investment_files()[:1],
+                         data={"filing_status": "joint"}).status_code == 422
+    assert unlocked.post("/api/investments", files=_investment_files()[:1], data={"year": "x"}).status_code == 422
+    assert unlocked.post("/api/investments", data={"year": "2025"}).status_code == 422
+
+
+def test_investments_export(unlocked):
+    r = unlocked.post("/api/investments/export/csv", files=_investment_files())
+    assert r.status_code == 200 and r.headers["content-type"].startswith("text/csv")
+    assert r.text.startswith("SUMMARY") and "900-45-6789" not in r.text
+    r = unlocked.post("/api/investments/export/xlsx", files=_investment_files())
+    assert r.status_code == 200 and r.content[:2] == b"PK"
+    assert unlocked.post("/api/investments/export/pdf", files=_investment_files()).status_code == 404

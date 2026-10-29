@@ -113,6 +113,7 @@ Want to try it without your own statements? Open the app URL with `?mock=1` for 
 - **CSV:** built-in profiles for Chase (card and checking), Citi, Capital One (both export styles), American Express, Bank of America (card and checking), Wells Fargo, Discover, US Bank, Apple Card and Gemini. Any other bank's CSV works through a generic detector or a one-time column mapping.
 - **PDF:** text-based statements, parsed and balance-checked. **Scanned/image-only statements aren't supported yet**, so use your bank's CSV export.
 - **Pay stubs (PDF or text):** Rippling-style, ADP-style and generic layouts. `ledgerstitch paystub stub.pdf` projects the year, estimates your W-2 (labelled as an estimate) and flags payroll "money found" signals: excess Social Security across employers, 401(k) room, HSA/FSA conflicts. It reads stubs in memory, doesn't store them and computes no income tax.
+- **1099s and positions:** composite 1099 PDFs (Fidelity-, Schwab-, Robinhood-style), 1099-B transaction CSVs and positions CSVs. `ledgerstitch investments 1099.pdf positions.csv` adds up dividends, interest and gains across brokers, shows where each total goes on the return, summarizes your holdings and allocation, and flags investment signals such as unrealized losses, missing cost basis and foreign tax credits. Nothing is stored, and no tax is computed.
 
 Missing your bank? In the app, use **"Report this file's format"**. It exports a masked structure
 sample with no amounts or descriptions. Then open a [Bank format issue](https://github.com/securectl/ledgerstitch/issues/new/choose).
@@ -128,6 +129,8 @@ sample with no amounts or descriptions. Then open a [Bank format issue](https://
 | Encrypted vaults, backups, recovery key, data export and delete | ✅ | ✅ |
 | Self-hosted server mode (Docker) | ✅ | ✅ |
 | Pay stub import, year-end projection, estimated W-2, payroll signals | ✅ | ✅ |
+| 1099 import, holdings snapshot and allocation, investment signals | ✅ | ✅ |
+| Lot-level gains, cross-account wash sales, harvesting plan, rebalancing | – | ✅ (Plus) |
 | More features, as paid add-ons | – | [See the website]({{SITE_URL}}) |
 | License | AGPL-3.0, **free, no usage limits** | Commercial |
 | | [Download](https://github.com/securectl/ledgerstitch/releases) | [**Get the full product →**]({{SITE_URL}}/signup?ref=github) |
