@@ -21,6 +21,8 @@ export const NAV = [
   ] },
   { group: 'Taxes', items: [
     { id: 'report', label: 'Report', icon: 'chart' },
+    { id: 'paystubs', label: 'Pay stubs', icon: 'wallet' },
+    { id: 'investments', label: 'Investments', icon: 'trendUp' },
   ] },
 ];
 const FOOT = { id: 'settings', label: 'Settings', icon: 'gear' };
@@ -160,7 +162,7 @@ function drawNav() {
   clear(tabs).append(
     tabItems.map(it => h('a', { href: `#/${it.id}`, dataset: { route: it.id } }, icon(it.icon, 22), h('span', it.label),
       it.count ? h('b.tb-count', { dataset: { reviewCount: '' }, hidden: true }) : null)),
-    h('button', { type: 'button', onclick: openMore, 'aria-label': 'More: import, receipts, settings, theme and lock' }, icon('more', 22), h('span', 'More')));
+    h('button', { type: 'button', onclick: openMore, 'aria-label': 'More: import, receipts, pay stubs, investments, settings, theme and lock' }, icon('more', 22), h('span', 'More')));
 }
 
 /** Show/hide the chrome and mark the current route. Call on every navigation. */
