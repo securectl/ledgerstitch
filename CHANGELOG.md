@@ -14,7 +14,7 @@ maintainers. Security fixes are listed under **Security** and announced in the a
 - **Pay stub import → year-end projection → estimated W-2.** `ledgerstitch paystub FILE...
   [--owner you|spouse] [--spouse FILE] [--final] [--out w2.xlsx]` and `POST /api/paystubs`
   (`/api/paystubs/export/{csv|xlsx}`) read Rippling-style, ADP-style (including space-separated
-  amounts such as `7 916 67`) and generic pay stubs from text-based PDFs or text. The tool
+  amounts such as `6 843 29`) and generic pay stubs from text-based PDFs or text. The tool
   classifies deductions (401(k)/403(b), Roth, HSA, health FSA, dependent care, Sec. 125,
   post-tax, reimbursements), checks pre-tax status against the Social Security and Medicare
   arithmetic, projects to December 31 by pay frequency, and estimates W-2 boxes 1-6, 10, 12, 13
