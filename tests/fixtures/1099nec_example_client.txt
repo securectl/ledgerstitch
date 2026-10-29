@@ -1,0 +1,5 @@
+Example Client Inc
+Form 1099-NEC   Nonemployee Compensation   2025
+Payer's TIN 98-7654321   Recipient's TIN 900-45-6789
+1 Nonemployee compensation                                          2,500.00
+4 Federal income tax withheld                                           0.00

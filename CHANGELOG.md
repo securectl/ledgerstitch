@@ -25,9 +25,24 @@ maintainers. Security fixes are listed under **Security** and announced in the a
   income, and Additional Medicare Tax not withheld. Each signal has a dollar amount and a
   citation. No income tax is computed (docs/TAX_NOTES.md section 8).
 
+- **Investments: 1099 import, holdings snapshot and free investment signals.** `ledgerstitch
+  investments FILE... [--filing-status mfj] [--out investments.xlsx]` and `POST /api/investments`
+  (`/api/investments/export/{csv|xlsx}`) read composite 1099 statements (Fidelity-, Schwab- and
+  Robinhood-style text PDFs or text: 1099-DIV, INT, B summary, MISC, NEC, R), 1099-B transaction
+  CSVs and positions CSVs (Fidelity, Schwab, Vanguard, Robinhood-style). Totals are summed across
+  brokers and labelled with their destination on the return (for example "Form 1040 line 3b",
+  "Form 8949 box A → Schedule D line 1a"). The holdings snapshot shows value, unrealized gain or
+  loss, allocation by asset class and account, and positions above 10%. Free signals: unrealized
+  losses, sales with no basis, wash sales disallowed, foreign tax credit, Section 199A REIT
+  dividends, tax-exempt interest, return of capital, expected K-1s, income with no withholding,
+  short-term gains, the capital loss limit and early retirement distributions. No income tax is
+  computed (docs/TAX_NOTES.md section 9).
+
 ### Security
 - `security.redact.mask_identifiers` masks SSNs, account, routing and employee numbers (last 4
   kept) in documents shown back to the user. AI descriptor redaction now also removes SSNs.
+  A labelled number is masked within its line only (a following line's amount or year is kept);
+  1099 parsing also masks EINs (`12-3456789`).
 
 ## [1.2.0] - 2026-10-19
 

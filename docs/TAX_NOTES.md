@@ -197,7 +197,8 @@ The tests in `tests/test_rules.py` cover them.
 - It is **not tax preparation software**. It does not compute income tax, produce IRS forms, or
   check for completeness or eligibility. The one exception to "no tax arithmetic" is the pay stub
   tool (section 8): payroll projections (Social Security and Medicare at their statutory rates,
-  annual contribution limits) shown as an *estimate*, never income tax.
+  annual contribution limits) shown as an *estimate*, never income tax. The investments tool
+  (section 9) only adds up what payers reported on 1099s and labels where each total goes.
 - It does **not e-file** or submit anything to the IRS, any state, or anyone else.
 - It does **not give tax, legal or accounting advice**. Lanes, categories and Schedule C lines are
   suggestions for the user and their tax professional to review.
@@ -288,3 +289,51 @@ signals is out of scope for the Community core.
 not checked. Dependent care above the limit and group-term life above $50,000 are not
 re-computed (the employer's own figures are used). Pay dates are assumed regular, with no extra
 off-cycle runs (bonuses).
+
+## 9. Investments: 1099 import, holdings snapshot and signals (`ledgerstitch/investments/`)
+
+**Boundary.** The investments tool adds up what payers reported on 1099s and what a positions
+export says, and labels where each total goes on the return. It computes **no income tax**: no
+capital gain tax, no rate stacking, no credits. Outputs are labelled **"SUMMARY — totals from your
+1099s and statements; not a tax return"**; the payer's 1099 (often corrected through March) is
+the document of record. Files are parsed in memory and never stored. TINs (including EINs in the
+form `12-3456789`) and account numbers are masked before parsing.
+
+**Inputs** (recognized by content, not file name):
+- composite 1099 statements, text-based PDF or text (Fidelity-, Schwab- and Robinhood-style
+  layouts, plus a generic "label ... amount" fallback): 1099-DIV boxes 1a, 1b, 2a-2d, 3, 4, 5, 6,
+  7, 8 (country, text), 12, 13; 1099-INT 1, 2, 3, 4, 6, 8, 9; 1099-MISC 2, 3, 4; 1099-NEC 1, 4;
+  1099-R 1, 2a, 4, 7 (distribution code, text); the 1099-B summary per Form 8949 category (A-F,
+  X): proceeds, cost basis, accrued market discount, wash sale loss disallowed, net gain;
+- a 1099-B transaction CSV (one row per sale). Term comes from the term column, else from the
+  dates (more than one year = long); covered status from its column, else "basis present". When
+  the lots add up to a statement's 1099-B summary (proceeds per category within $1), they are the
+  same account and counted once;
+- a positions CSV (Fidelity, Schwab, Vanguard, Robinhood-style headers). Asset class is a guess
+  from the symbol, description and the export's type column.
+
+**Destinations** (informational): 1099-DIV 1a → Form 1040 line 3b, 1b → 3a, 2a → Schedule D
+line 13, 5 → Form 8995, 7 → Schedule 3 line 1, 12 → line 2a; 1099-INT 1 → line 2b, 8 → line 2a;
+1099-B box A/B/C → Schedule D lines 1a-1b/2/3, D/E/F → 8a-8b/9/10 through Form 8949; 1099-R 1/2a →
+lines 4a-4b or 5a-5b; any box 4 → line 25b. Net gain per category = proceeds − cost + market
+discount + wash sale disallowed (Form 8949 column g); a printed net that differs is kept and
+flagged.
+
+**Signals** (totals only, each with a citation): unrealized losses in the positions (sum and
+count; §1211(b) $3,000 / $1,500 MFS limit); 1099-B proceeds with no basis, and noncovered
+basis; wash sale losses the broker disallowed (§1091; brokers see one account only); foreign tax
+paid (credit, without Form 1116 up to $300 / $600 MFJ under §904(j)); Section 199A REIT
+dividends (20% of box 5, Form 8995); tax-exempt interest and its AMT part; nondividend
+distributions (basis reduction); a likely Schedule K-1 for partnership units; investment and
+1099 income of $1,000+ with nothing withheld (§6654 underpayment rules); net gains mostly short-term;
+a net capital loss above the yearly limit; a 1099-R with distribution code 1 (§72(t)).
+
+**Not in the Community core** (available in LedgerStitch Plus): FIFO / specific-lot gains from
+trade history, wash sale detection across accounts and a spouse's, the tax-loss harvesting plan
+with dates, target allocation, drift and rebalancing, and lot selection.
+
+**Known limits.** Scanned statements need OCR first (or use the broker's CSV download). Lot
+detail pages in PDFs are not read; use the 1099-B CSV. State boxes (14-16) and 1099-OID, 1099-K
+and K-1s are not read. Positions exports rarely carry purchase dates, so unrealized losses are not
+split into short- and long-term. [Founder: confirm the §904(j) and §199A thresholds each year.]
+
