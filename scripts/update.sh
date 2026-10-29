@@ -264,7 +264,7 @@ update_docker() {
   if [ -n "${running% }" ]; then
     say "recreating changed services (running: $running)"
     # shellcheck disable=SC2086 # word splitting intended: one argument per service
-    dc up -d --no-deps $running
+    dc up -d --no-deps --no-build $running   # pull_policy: build would rebuild without the labels
   else
     say "no services are running; start them with: cd docker && docker compose up -d"
   fi

@@ -378,7 +378,7 @@ def test_docker_code_only_change(env):
     up_i = next(i for i, ln in enumerate(log) if ln.startswith("compose up"))
     assert run_i < build_i < up_i                                  # backup, then build, then recreate
     assert "-v ledgerstitch_ledgerstitch-data:/data:ro" in log[run_i] and "--network none" in log[run_i]
-    assert log[up_i] == "compose up -d --no-deps ledgerstitch caddy"   # only what was running
+    assert log[up_i] == "compose up -d --no-deps --no-build ledgerstitch caddy"   # only what was running; no unlabeled rebuild
     backups = list((env.home / "LedgerStitch-docker-backups").iterdir())
     assert len(backups) == 1 and backups[0].read_text() == "TARDATA"
     assert oct(backups[0].stat().st_mode & 0o777) == "0o600"
