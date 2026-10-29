@@ -45,7 +45,7 @@ while [ $# -gt 0 ]; do
     --docker) MODE=docker ;;
     --native) MODE=native ;;
     --dev) MODE=dev ;;
-    --ref) [ $# -ge 2 ] && [ -n "$2" ] || die "--ref needs a value"; REF="$2"; shift ;;
+    --ref) if [ $# -lt 2 ] || [ -z "$2" ]; then die "--ref needs a value"; fi; REF="$2"; shift ;;
     --ref=*) REF="${1#*=}" ;;
     --force) FORCE=1 ;;
     --no-backup) BACKUP=0 ;;
