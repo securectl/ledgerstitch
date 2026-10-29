@@ -21,6 +21,39 @@ profile, account_id, import_id) -> (txns, warnings, info)` (see `ingest/dispatch
 
 XML is always parsed with `defusedxml` (no DTD/entity expansion).
 
+### Pay stubs (`payroll/paystub.py`)
+
+Pay stubs aren't statements, so they don't go through `parse_any` or into the ledger. They have
+their own entry point, `payroll.analyze_paystubs(...)` (CLI `ledgerstitch paystub`, API
+`POST /api/paystubs`). The tool parses them in memory, projects them to year end and returns an
+estimated W-2. It doesn't store them (see TAX_NOTES.md section 8).
+
+| Layout | Recognized by | Notes |
+|---|---|---|
+| Rippling-style | "EARNINGS STATEMENT", EMPLOYEE TAXES, CURRENT / YTD columns | EMPLOYEE and COMPANY contribution columns on DEDUCTIONS rows |
+| ADP-style | "this period" / "year to date", Statutory Deductions, Period Starting / Ending | space-separated amounts (`7 916 67`, `-560 98`); `*` = excluded from federal taxable wages; "Your federal taxable wages this period are $X" is cross-checked |
+| Generic | any "label  current  YTD" table, with or without a header row | the last two amounts on a line are current and YTD |
+
+Input: text-based PDFs (rendered to fixed-column text with pdfplumber, the statement parser's
+library) or plain text. SSNs, account, routing and employee numbers are masked
+(`security.redact.mask_identifiers`, last 4 kept) before parsing, so no output carries them.
+Fixtures: `tests/fixtures/make_paystubs.py` (synthetic, deterministic).
+
+### 1099s and positions (`investments/`)
+
+Like pay stubs, these don't go into the ledger: `investments.analyze_investments(...)` (CLI
+`ledgerstitch investments`, API `POST /api/investments`) reads them in memory and returns totals,
+a holdings snapshot and signals (TAX_NOTES.md section 9). Each file's kind comes from its content.
+
+| Input | Recognized by | Notes |
+|---|---|---|
+| Composite 1099 (PDF with text, or text) | a "1099-DIV / INT / B / MISC / NEC / R" heading | a box is read by its number (`1a`, `Box 1a -`, `1a-`) or its label; the 1099-B summary is one row per Form 8949 box (letter, or "short-term ... covered / noncovered"), columns matched to the header by right edge |
+| 1099-B transaction CSV | a header with Proceeds and Date Sold or Cost Basis | term from the column or the dates; covered from the column or basis present; a lot file matching a PDF summary is counted once |
+| Positions CSV | a header with Symbol or Description and Value or Quantity (no Proceeds) | Fidelity, Schwab (preamble line, `$`, `--`, Account Total row), Vanguard, Robinhood-style; value = quantity × price when missing |
+
+TINs, EINs and account numbers are masked (last 4 kept) before parsing. Fixtures:
+`tests/fixtures/make_1099s.py` (synthetic, deterministic).
+
 ### Payment platforms and fintech ledgers (`ingest/platforms.py`)
 Selected by the catalog id. Without these rules a plain import double-counts income
 (the platform charge *and* the bank deposit of the payout) and hides fees.

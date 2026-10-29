@@ -1,0 +1,57 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [4 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 5 0 R >>
+endobj
+5 0 obj
+<< /Length 3353 >>
+stream
+BT /F1 7 Tf 1 0 0 1 24.00 752.00 Tm (Example Brokerage LLC                              2025 TAX REPORTING STATEMENT) Tj ET
+BT /F1 7 Tf 1 0 0 1 24.00 742.00 Tm (100 Sample Street, Springfield                     Account No. 900123456) Tj ET
+BT /F1 7 Tf 1 0 0 1 24.00 732.00 Tm (Payer's TIN: 98-7654321                            Recipient's TIN: 900-45-6789) Tj ET
+BT /F1 7 Tf 1 0 0 1 24.00 722.00 Tm (Recipient: Jane Doe) Tj ET
+BT /F1 7 Tf 1 0 0 1 24.00 702.00 Tm (Form 1099-DIV   Dividends and Distributions        Copy B for Recipient) Tj ET
+BT /F1 7 Tf 1 0 0 1 24.00 692.00 Tm (1a Total Ordinary Dividends                                        12,032.46) Tj ET
+BT /F1 7 Tf 1 0 0 1 24.00 682.00 Tm (1b Qualified Dividends                                              9,410.22) Tj ET
+BT /F1 7 Tf 1 0 0 1 24.00 672.00 Tm (2a Total Capital Gain Distr.                                        1,204.18) Tj ET
+BT /F1 7 Tf 1 0 0 1 24.00 662.00 Tm (2b Unrecap. Sec. 1250 Gain                                              0.00) Tj ET
+BT /F1 7 Tf 1 0 0 1 24.00 652.00 Tm (3 Nondividend Distributions                                             0.00) Tj ET
+BT /F1 7 Tf 1 0 0 1 24.00 642.00 Tm (4 Federal Income Tax Withheld                                           0.00) Tj ET
+BT /F1 7 Tf 1 0 0 1 24.00 632.00 Tm (5 Section 199A Dividends                                              800.00) Tj ET
+BT /F1 7 Tf 1 0 0 1 24.00 622.00 Tm (7 Foreign Tax Paid                                                    245.30) Tj ET
+BT /F1 7 Tf 1 0 0 1 24.00 612.00 Tm (8 Foreign Country or U.S. Possession:   Various) Tj ET
+BT /F1 7 Tf 1 0 0 1 24.00 602.00 Tm (12 Exempt-Interest Dividends                                          310.00) Tj ET
+BT /F1 7 Tf 1 0 0 1 24.00 592.00 Tm (13 Specified Private Activity Bond Interest Dividends                  22.00) Tj ET
+BT /F1 7 Tf 1 0 0 1 24.00 572.00 Tm (Form 1099-INT   Interest Income) Tj ET
+BT /F1 7 Tf 1 0 0 1 24.00 562.00 Tm (1 Interest Income                                                     412.10) Tj ET
+BT /F1 7 Tf 1 0 0 1 24.00 552.00 Tm (3 Interest on U.S. Savings Bonds and Treas. Obligations               150.00) Tj ET
+BT /F1 7 Tf 1 0 0 1 24.00 542.00 Tm (4 Federal Income Tax Withheld                                           0.00) Tj ET
+BT /F1 7 Tf 1 0 0 1 24.00 522.00 Tm (Form 1099-B   Proceeds From Broker and Barter Exchange Transactions   Summary) Tj ET
+BT /F1 7 Tf 1 0 0 1 24.00 512.00 Tm (                                                                  Proceeds      Cost Basis   Market Discount   Wash Sale Loss Dis.   Net Gain/Loss) Tj ET
+BT /F1 7 Tf 1 0 0 1 24.00 502.00 Tm (Short-term transactions for covered tax lots \(Box A\)              8,050.00        7,400.00              0.00                200.00          850.00) Tj ET
+BT /F1 7 Tf 1 0 0 1 24.00 492.00 Tm (Short-term transactions for noncovered tax lots \(Box B\)           3,000.00                              0.00                  0.00) Tj ET
+BT /F1 7 Tf 1 0 0 1 24.00 482.00 Tm (Long-term transactions for covered tax lots \(Box D\)              14,000.00       10,600.00              0.00                  0.00        3,400.00) Tj ET
+BT /F1 7 Tf 1 0 0 1 24.00 472.00 Tm (Total                                                            25,050.00       18,000.00              0.00                200.00        4,250.00) Tj ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000210 00000 n 
+0000000336 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+3740
+%%EOF

@@ -1,0 +1,15 @@
+Specimen Markets LLC
+2025 1099 Consolidated Tax Statement
+Account 900345678
+
+1099-DIV  Dividends and Distributions
+1a- Total ordinary dividends (includes lines 1b, 5, 2e)          210.00
+1b- Qualified dividends                                          150.00
+5- Section 199A dividends                                         40.00
+4- Federal income tax withheld                                     0.00
+
+Summary of proceeds, gains & losses, adjustments and income tax withheld
+1099-B
+Term           Form 8949 type         Proceeds   Cost basis   Market discount   Wash sale loss disallowed   Net gain or loss(-)
+Short          A (basis reported to the IRS)   9,500.00    10,000.00          0.00                    300.00               -200.00
+Total Short-term                               9,500.00    10,000.00          0.00                    300.00               -200.00

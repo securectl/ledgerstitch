@@ -1,0 +1,34 @@
+INITECH INC                                      Earnings Statement
+Company Code  ZX/ABC 01234567                    Period Starting:  03/01/2025
+Loc/Dept      Number 012345                      Period Ending:    03/14/2025
+                                                 Pay Date:         03/21/2025
+Filing Status: Married filing jointly
+Social Security Number: 987-65-4321
+
+Earnings                        rate         hours   this period  year to date
+Regular                      98.9584         80.00      7 916 67     47 500 02
+Bonus                                                                 5 000 00
+            Gross Pay                                  $7 916 67     52 500 02
+
+Statutory Deductions                                 this period  year to date
+Federal Income Tax                                     -1 012 44      7 174 64
+Social Security Tax                                      -467 60      3 115 60
+Medicare Tax                                             -109 36        728 66
+CA State Income Tax                                      -380 11      2 280 66
+CA SDI Tax                                                -95 00        630 00
+
+Other
+401K Contrib                                            -560 98*      3 365 88
+Dental                                                   -22 50*        135 00
+Medical                                                 -150 00*        900 00
+Dep Care FSA                                            -192 30*      1 153 80
+Wellness Plan                                             -10 00         60 00
+Life Ins                                                  -12 00         72 00
+
+            Net Pay                                    $4 904 38
+
+* Excluded from federal taxable wages
+  Your federal taxable wages this period are $6,980.89
+
+Net Pay Distribution
+  Checking1  Account Number 9876543210            $4,904.38

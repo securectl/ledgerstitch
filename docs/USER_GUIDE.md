@@ -280,6 +280,32 @@ portal rather than plain email, and delete stray copies from Downloads.
 
 CSV export is also available for any other tool.
 
+### Pay stubs: estimate your W-2 before January
+
+Run `ledgerstitch paystub latest-stub.pdf` (add `--spouse their-stub.pdf` for a spouse, and one
+stub per employer). LedgerStitch projects each stub to December 31 and shows an **estimated**
+W-2. It also lists payroll "money found" signals, such as excess Social Security withheld when
+you had two employers, how much 401(k) room is left this year, or an HSA alongside a
+general-purpose FSA. Use `--final` with your last stub of the year, and `--out w2.xlsx` to save
+a copy. Stubs are read in memory and not stored. SSNs and account numbers are masked in every
+output. It's an estimate for planning: your employer's W-2 is the real one, and LedgerStitch
+doesn't compute your income tax.
+
+### Investments: your 1099s and portfolio in one place
+
+Run `ledgerstitch investments 1099-fidelity.pdf 1099-schwab.pdf positions.csv` with every 1099
+(PDF with a text layer, or text), any 1099-B transaction CSV, and the "Positions" CSV your broker
+lets you download. LedgerStitch adds up dividends, interest and capital gains across brokers, shows
+where each total goes on the return (for example "Form 1040 line 3b"), and summarizes your
+holdings: value, unrealized gain or loss, allocation by asset class and account, and any position
+above 10% of the portfolio. It also lists free "money found" signals, such as unrealized losses
+you could harvest before December 31, sales with no cost basis, foreign tax you can take as a
+credit, REIT dividends that get a 20% deduction, or a K-1 still to come. Add `--filing-status mfj`
+for thresholds that depend on it, and `--out investments.xlsx` to save a copy. Files are read in
+memory and not stored; tax IDs and account numbers are masked. It's a summary for planning: the
+1099 from your broker is the real one, and LedgerStitch doesn't compute your tax. Lot-by-lot
+gains, wash sales across accounts, a harvesting plan and rebalancing are in LedgerStitch Plus.
+
 ## 9. QuickBooks
 
 **QuickBooks Online (bank upload CSV)**

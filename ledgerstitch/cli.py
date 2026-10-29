@@ -7,6 +7,8 @@
     ledgerstitch export <vault> --format xlsx --year 2025 --out report.xlsx
     ledgerstitch vaults               # list vaults in the data dir
     ledgerstitch benchmark [--ai] [--out DIR]   # accuracy benchmark on the synthetic corpus
+    ledgerstitch paystub FILE... [--owner you|spouse] [--spouse FILE] [--final] [--out w2.xlsx]
+    ledgerstitch investments FILE... [--filing-status mfj] [--json] [--out investments.xlsx]
     ledgerstitch --server [--host 0.0.0.0] [--port 8080] [--tls-cert C --tls-key K]   # self-hosted
     ledgerstitch admin-password       # set/reset the server-mode admin password
     ledgerstitch update [--offline] [--json]   # is a newer release out, and how to update this install
@@ -324,6 +326,123 @@ def cmd_benchmark(args) -> int:
     return 0
 
 
+def _fmt_money(v) -> str:
+    return "-" if v is None else f"{v:,.2f}"
+
+
+def cmd_paystub(args) -> int:
+    """Pay stubs -> year-end projection, estimated W-2 and household signals. In memory, no vault."""
+    import json
+
+    from .payroll import analyze_paystubs
+    from .store import to_jsonable
+    files = []
+    try:
+        for f in args.files:
+            p = Path(f).expanduser()
+            files.append((p.name, p.read_bytes(), args.owner))
+        for f in args.spouse or []:
+            p = Path(f).expanduser()
+            files.append((p.name, p.read_bytes(), "spouse"))
+        report = analyze_paystubs(files, final=args.final, frequency=args.frequency,
+                                  filing_status=args.filing_status,
+                                  spouse_no_earned_income=args.spouse_no_earned_income, year=args.year)
+    except (OSError, ValueError) as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 1
+    if args.out:
+        out = Path(args.out).expanduser()
+        if out.suffix.lower() == ".xlsx":
+            from .reports.paystub_export import export_paystub_xlsx
+            export_paystub_xlsx(report, out)
+        else:
+            from .reports.paystub_export import export_paystub_csv
+            export_paystub_csv(report, out)
+        print(f"Wrote {out} (plaintext - store it somewhere safe).", file=sys.stderr)
+    if args.json:
+        print(json.dumps(to_jsonable(report), indent=2))
+        return 0
+    print(report.label)
+    print(f"Tax year {report.year}, filing status {report.filing_status}")
+    for w in report.w2:
+        basis = "YTD as final" if w.final else f"{w.periods_remaining} pay dates left, {w.frequency}"
+        print(f"\n{w.owner}: {w.employer or '(employer not found)'} ({basis})")
+        for box in sorted(w.boxes, key=int):
+            print(f"  box {box:>2}  {_fmt_money(w.boxes[box]):>14}")
+        for code, v in w.box12.items():
+            print(f"  box 12{code:<3}{_fmt_money(v):>14}")
+        print(f"  box 13  retirement plan: {'yes' if w.box13_retirement_plan else 'no'}")
+        for line in w.box14:
+            print(f"  box 14  {line}")
+    if report.signals:
+        print("\nSignals")
+        for s in report.signals:
+            who = s.owner or "household"
+            print(f"  [{s.severity}] {who}: {s.title}")
+            print(f"      {s.explanation} ({s.citation})")
+    for wn in report.warnings:
+        print(f"warning: {wn}", file=sys.stderr)
+    print(f"\n{report.disclaimer}")
+    return 0
+
+
+def cmd_investments(args) -> int:
+    """1099s, 1099-B lot CSVs and positions CSVs -> totals, holdings snapshot and signals. In memory."""
+    import json
+
+    from .investments import analyze_investments
+    from .store import to_jsonable
+    try:
+        files = [(Path(f).expanduser().name, Path(f).expanduser().read_bytes()) for f in args.files]
+        report = analyze_investments(files, year=args.year, filing_status=args.filing_status)
+    except (OSError, ValueError) as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 1
+    if args.out:
+        out = Path(args.out).expanduser()
+        if out.suffix.lower() == ".xlsx":
+            from .reports.investments_export import export_investments_xlsx
+            export_investments_xlsx(report, out)
+        else:
+            from .reports.investments_export import export_investments_csv
+            export_investments_csv(report, out)
+        print(f"Wrote {out} (plaintext - store it somewhere safe).", file=sys.stderr)
+    if args.json:
+        print(json.dumps(to_jsonable(report), indent=2))
+        return 0
+    print(report.label)
+    print(f"Tax year {report.year or 'unknown'}")
+    if report.income:
+        print("\n1099 income")
+        for t in report.income:
+            print(f"  {t.form:<9} box {t.box:<3} {t.label:<52}{_fmt_money(t.amount):>14}  -> {t.destination}")
+    if report.capital_gains:
+        print("\nCapital gains (Form 8949 / Schedule D)")
+        for g in report.capital_gains:
+            print(f"  box {g.category} {g.term:<8} proceeds {_fmt_money(g.proceeds):>14}  basis "
+                  f"{_fmt_money(g.cost_basis):>14}  net {_fmt_money(g.gain):>14}")
+        print(f"  net short-term {_fmt_money(report.short_term_net)}, net long-term {_fmt_money(report.long_term_net)}")
+    hs = report.holdings_summary
+    if hs:
+        print(f"\nHoldings: {hs.positions} positions, {_fmt_money(hs.market_value)}"
+              + (f" as of {hs.as_of.isoformat()}" if hs.as_of else ""))
+        print(f"  unrealized {_fmt_money(hs.unrealized_gain)} (losses {_fmt_money(hs.unrealized_losses)} in "
+              f"{hs.loss_positions} positions)")
+        print("  " + ", ".join(f"{a.name} {a.pct}%" for a in hs.by_class))
+        for a in hs.concentrated:
+            print(f"  concentrated: {a.name} is {a.pct}% of the portfolio")
+    if report.signals:
+        print("\nSignals")
+        for s in report.signals:
+            print(f"  [{s.severity}] {s.title}")
+            print(f"      {s.explanation} ({s.citation})")
+    for wn in report.warnings:
+        print(f"warning: {wn}", file=sys.stderr)
+    print(f"\nIn LedgerStitch Plus: {'; '.join(report.plus_features)}.")
+    print(report.disclaimer)
+    return 0
+
+
 def cmd_update(args) -> int:
     """Report whether a newer release exists and what updating this install takes. Changes nothing;
     scripts/update.sh applies the update. The only network call is one GET to the releases API."""
@@ -407,6 +526,33 @@ def build_parser() -> argparse.ArgumentParser:
     pb.add_argument("--seed", type=int, default=DEFAULT_SEED, help="corpus seed (default %(default)s)")
     pb.add_argument("--corpus-out", default=None, metavar="DIR", help="also keep the generated corpus here")
     pb.set_defaults(func=cmd_benchmark)
+
+    pp = sub.add_parser("paystub", parents=[common],
+                        help="pay stubs -> year-end projection, estimated W-2 and free payroll signals")
+    pp.add_argument("files", nargs="+", help="pay stub PDFs (text-based) or text files")
+    pp.add_argument("--owner", choices=["you", "spouse"], default="you", help="whose stubs FILE... are")
+    pp.add_argument("--spouse", action="append", metavar="FILE", help="a spouse's pay stub (repeatable)")
+    pp.add_argument("--final", action="store_true", help="treat YTD as the year's final totals (no projection)")
+    pp.add_argument("--frequency", choices=["weekly", "biweekly", "semimonthly", "monthly"], default=None,
+                    help="pay frequency (default: detected from the pay period)")
+    pp.add_argument("--filing-status", choices=["single", "mfj", "mfs"], default=None)
+    pp.add_argument("--spouse-no-earned-income", action="store_true",
+                    help="one spouse has no earned income (dependent care FSA warning)")
+    pp.add_argument("--year", type=int, default=None)
+    pp.add_argument("--json", action="store_true", help="print the full result as JSON")
+    pp.add_argument("--out", default=None, help="also write the estimate to a .csv or .xlsx file")
+    pp.set_defaults(func=cmd_paystub)
+
+    pn = sub.add_parser("investments", parents=[common],
+                        help="1099s and positions -> income totals, capital gains, holdings and free signals")
+    pn.add_argument("files", nargs="+",
+                    help="1099 statements (text-based PDF or text), 1099-B lot CSVs or positions CSVs")
+    pn.add_argument("--filing-status", choices=["single", "mfj", "mfs", "hoh"], default=None)
+    pn.add_argument("--year", type=int, default=None, help="tax year to keep (default: the latest found)")
+    pn.add_argument("--json", action="store_true", help="print the full result as JSON")
+    pn.add_argument("--out", default=None, help="also write the summary to a .csv or .xlsx file")
+    pn.set_defaults(func=cmd_investments)
+
 
     pu = sub.add_parser("update", parents=[common],
                         help="check for a newer release and show how to update this install (changes nothing)")

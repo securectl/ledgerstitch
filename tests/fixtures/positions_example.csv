@@ -1,0 +1,11 @@
+Account Number,Account Name,Symbol,Description,Quantity,Last Price,Last Price Change,Current Value,Today's Gain/Loss Dollar,Today's Gain/Loss Percent,Total Gain/Loss Dollar,Total Gain/Loss Percent,Percent Of Account,Cost Basis Total,Average Cost Basis,Type
+Z90012345,Individual,SPAXX**,HELD IN MONEY MARKET,,,,$5000.00,,,,,10.00%,,,Cash
+Z90012345,Individual,EXTC,EXAMPLE TECH CORP,150,$120.00,+$1.00,$18000.00,+$150.00,+0.84%,+$6000.00,+50.00%,36.00%,$12000.00,$80.00,Cash
+Z90012345,Individual,BMIX,BROAD MARKET INDEX ETF,40,$300.00,+$2.00,$12000.00,+$80.00,+0.67%,+$2000.00,+20.00%,24.00%,$10000.00,$250.00,Cash
+Z90012345,Individual,EPPX,ENERGY PIPELINE PARTNERS LP COMMON UNITS,100,$45.00,-$0.50,$4500.00,-$50.00,-1.10%,-$500.00,-10.00%,9.00%,$5000.00,$50.00,Cash
+Z90012345,Individual,SBIO,SAMPLE BIOTECH INC,200,$20.00,-$1.00,$4000.00,-$200.00,-4.76%,-$3000.00,-42.86%,8.00%,$7000.00,$35.00,Cash
+Z90012345,Individual,VXFDX,SAMPLE TOTAL MARKET INDEX FUND ADMIRAL SHARES,50,$130.00,,$6500.00,,,+$1500.00,+30.00%,13.00%,$5000.00,$100.00,Cash
+Z90012345,Individual,Pending Activity,,,,,$-0.00,,,,,,,,
+
+"The data and information in this spreadsheet is provided to you solely for your use."
+"Date downloaded 10/24/2025 4:05 PM ET"
