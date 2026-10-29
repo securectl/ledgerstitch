@@ -16,6 +16,7 @@
 // A plain public checkout has no add-ons, so its demo shows only the free features.
 
 import { setupRoutes } from './mock-setup.js';           // first-run setup wizard (/api/setup/*)
+import { taxDocRoutes } from './mock-taxdocs.js';        // pay stubs and investments (/api/paystubs, /api/investments)
 
 const qs = new URLSearchParams(location.search);
 const PLAN = /^[a-z][a-z0-9_]{0,31}$/.test(qs.get('plan') || '') ? qs.get('plan') : 'free';
@@ -727,6 +728,8 @@ export async function mockFetch(input, init = {}) {
   if (!state.unlocked && !open.includes(path)) return err(409, 'The vault is locked. Unlock it to continue.', { locked: true });
   const fromAddon = await addonRoute(path, method, url, init);
   if (fromAddon !== undefined) return fromAddon;
+  const taxDoc = taxDocRoutes(path, method, init, { json, err });
+  if (taxDoc !== undefined) return taxDoc;
 
   // status & vaults
   if (path === '/api/status') return json(statusPayload());

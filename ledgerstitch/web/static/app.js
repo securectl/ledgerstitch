@@ -10,6 +10,8 @@ import { renderLedger } from './screen-ledger.js';
 import { renderReceipts } from './screen-receipts.js';
 import { renderReport } from './screen-report.js';
 import { renderSettings } from './screen-settings.js';
+import { renderPaystubs } from './screen-paystubs.js';
+import { renderInvestments } from './screen-investments.js';
 import { buildShell, syncShell, setTopActions, setTopMeta, screenContext } from './shell.js';
 import { renderOverview, overviewSkeleton } from './screen-overview.js';
 import { signupUrl } from './upsell.js';   // "Get the full product" in the upgrade dialog
@@ -31,6 +33,8 @@ const ROUTES = {
   ledger: { render: renderLedger, title: 'Ledger' },
   receipts: { render: renderReceipts, title: 'Receipts' },
   report: { render: renderReport, title: 'Report' },
+  paystubs: { render: renderPaystubs, title: 'Pay stubs' },
+  investments: { render: renderInvestments, title: 'Investments' },
   settings: { render: renderSettings, title: 'Settings' },
 };
 // Old hashes keep working.

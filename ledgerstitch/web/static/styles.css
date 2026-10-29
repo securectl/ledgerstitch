@@ -1561,3 +1561,48 @@ details.why > p { margin-top: 6px; line-height: 1.45; max-width: 46ch; }
 /* add-on settings sections span the settings grid */
 .st-grid > .st-addons { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-5); min-width: 0; }
 .st-grid > .st-addons:empty { display: none; }
+/* pay stubs + investments (screen-paystubs.js, screen-investments.js, tax-docs.js) */
+.td { display: flex; flex-direction: column; gap: var(--s-5); min-width: 0; }
+.td > *, .td-results > *, .td-col > * { min-width: 0; max-width: 100%; }
+.td-label .chip { white-space: normal; height: auto; min-height: 24px; }
+.td-dest-sm { display: none; }
+.td-results { display: flex; flex-direction: column; gap: var(--s-5); min-width: 0; }
+.td-input .card-b { display: flex; flex-direction: column; gap: var(--s-3); }
+.td-drop { min-height: 150px; }
+.td-who { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
+.td-mem { display: inline-flex; align-items: center; gap: 4px; }
+.td-files:empty { display: none; }
+.td-files { border: 1px solid var(--line); border-radius: var(--r-card); }
+.td-file { padding: 0 var(--s-3); }
+.td-file-ic { color: var(--ink-3); display: inline-flex; }
+.td-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-3) var(--s-4); margin-bottom: var(--s-3); }
+.td-opts .field + .field { margin-top: 0; }
+.td-label { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
+.td-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: var(--s-5); align-items: start; }
+.td-col { display: flex; flex-direction: column; gap: var(--s-5); min-width: 0; }
+.td-export { gap: var(--s-2); }
+.td-sig-list, .td-warn-list, .td-plus-list { list-style: none; margin: 0; padding: 0; }
+.td-sig { padding: var(--s-4) var(--s-5); border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
+.td-sig:first-child { border-top: 0; }
+.td-sig-h { display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap; }
+.td-sig-t { font-size: var(--fs-14); }
+.td-sig-x { margin: 0; color: var(--ink-2); font-size: var(--fs-14); }
+.td-sig-c { margin: 0; display: inline-flex; align-items: center; gap: 4px; }
+.td-warn-list li { display: flex; gap: var(--s-2); align-items: flex-start; color: var(--ink-2); font-size: var(--fs-13); padding: 4px 0; }
+.td-warn-list li > svg { flex: none; margin-top: 2px; color: var(--warn); }
+.td-plus-list { display: flex; flex-direction: column; gap: 6px; text-align: left; font-size: var(--fs-13); color: var(--ink-2); }
+.td-plus-list li { display: flex; gap: var(--s-2); align-items: center; }
+.td-plus-list li > svg { color: var(--ink-3); flex: none; }
+.td-alloc { display: flex; align-items: center; gap: var(--s-5); margin-bottom: var(--s-4); }
+.td-alloc-n { margin: var(--s-3) 0 0; }
+.td-legal { margin: 0; }
+.td .money.neg, .td td.neg { color: var(--danger); }
+@media (max-width: 1099px) { .td-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 719px) {
+  .td-opts { grid-template-columns: minmax(0, 1fr); }
+  .td-alloc { flex-direction: column; align-items: flex-start; }
+  .td-income th:nth-child(4), .td-income td:nth-child(4) { display: none; }
+  .td-dest-sm { display: block; }
+  .td-gains th:nth-child(4), .td-gains td:nth-child(4) { display: none; }
+  .td-holdings th:nth-child(2), .td-holdings td:nth-child(2) { display: none; }
+}

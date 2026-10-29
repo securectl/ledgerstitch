@@ -11,6 +11,11 @@ maintainers. Security fixes are listed under **Security** and announced in the a
 ## [Unreleased]
 
 ### Added
+- **Pay stubs and Investments screens.** Every workspace now has **Taxes → Pay stubs** and
+  **Taxes → Investments**: drop the files, set the options, and see the estimated W-2s, the 1099
+  totals, gains, holdings with allocation and the free signals, with CSV and Excel downloads.
+  The files are read in memory and nothing is saved in the workspace. The demo (`?mock=1`) shows
+  both screens with invented data.
 - **Pay stub import → year-end projection → estimated W-2.** `ledgerstitch paystub FILE...
   [--owner you|spouse] [--spouse FILE] [--final] [--out w2.xlsx]` and `POST /api/paystubs`
   (`/api/paystubs/export/{csv|xlsx}`) read Rippling-style, ADP-style (including space-separated

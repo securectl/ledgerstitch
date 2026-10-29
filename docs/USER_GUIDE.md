@@ -282,7 +282,12 @@ CSV export is also available for any other tool.
 
 ### Pay stubs: estimate your W-2 before January
 
-Run `ledgerstitch paystub latest-stub.pdf` (add `--spouse their-stub.pdf` for a spouse, and one
+In the app, open **Taxes → Pay stubs** in any workspace and drop your latest stub from each job.
+Choose **You** or **Spouse** before adding a spouse's stubs (or change it on the file's row), and
+open **Options** for the pay frequency, filing status, "these are the year's last stubs" and "one
+of you has no earned income". The screen shows an estimated W-2 per employer, the payroll
+signals and their citations, and **CSV** / **Excel** downloads. From the command line, run
+`ledgerstitch paystub latest-stub.pdf` (add `--spouse their-stub.pdf` for a spouse, and one
 stub per employer). LedgerStitch projects each stub to December 31 and shows an **estimated**
 W-2. It also lists payroll "money found" signals, such as excess Social Security withheld when
 you had two employers, how much 401(k) room is left this year, or an HSA alongside a
@@ -293,7 +298,11 @@ doesn't compute your income tax.
 
 ### Investments: your 1099s and portfolio in one place
 
-Run `ledgerstitch investments 1099-fidelity.pdf 1099-schwab.pdf positions.csv` with every 1099
+In the app, open **Taxes → Investments** in any workspace and drop your 1099s, a 1099-B CSV and a
+positions CSV. The screen shows the 1099 totals with where each goes on the return, capital gains
+by Form 8949 box, your holdings and allocation, the investment signals, and **CSV** / **Excel**
+downloads. Both screens read the files in memory: nothing is added to the workspace, and the
+result is gone when you leave the screen. From the command line, run `ledgerstitch investments 1099-fidelity.pdf 1099-schwab.pdf positions.csv` with every 1099
 (PDF with a text layer, or text), any 1099-B transaction CSV, and the "Positions" CSV your broker
 lets you download. LedgerStitch adds up dividends, interest and capital gains across brokers, shows
 where each total goes on the return (for example "Form 1040 line 3b"), and summarizes your
