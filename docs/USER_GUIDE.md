@@ -280,6 +280,17 @@ portal rather than plain email, and delete stray copies from Downloads.
 
 CSV export is also available for any other tool.
 
+### Pay stubs: estimate your W-2 before January
+
+Run `ledgerstitch paystub latest-stub.pdf` (add `--spouse their-stub.pdf` for a spouse, and one
+stub per employer). LedgerStitch projects each stub to December 31 and shows an **estimated**
+W-2. It also lists payroll "money found" signals, such as excess Social Security withheld when
+you had two employers, how much 401(k) room is left this year, or an HSA alongside a
+general-purpose FSA. Use `--final` with your last stub of the year, and `--out w2.xlsx` to save
+a copy. Stubs are read in memory and not stored. SSNs and account numbers are masked in every
+output. It's an estimate for planning: your employer's W-2 is the real one, and LedgerStitch
+doesn't compute your income tax.
+
 ## 9. QuickBooks
 
 **QuickBooks Online (bank upload CSV)**

@@ -7,6 +7,7 @@
     ledgerstitch export <vault> --format xlsx --year 2025 --out report.xlsx
     ledgerstitch vaults               # list vaults in the data dir
     ledgerstitch benchmark [--ai] [--out DIR]   # accuracy benchmark on the synthetic corpus
+    ledgerstitch paystub FILE... [--owner you|spouse] [--spouse FILE] [--final] [--out w2.xlsx]
     ledgerstitch --server [--host 0.0.0.0] [--port 8080] [--tls-cert C --tls-key K]   # self-hosted
     ledgerstitch admin-password       # set/reset the server-mode admin password
 
@@ -323,6 +324,66 @@ def cmd_benchmark(args) -> int:
     return 0
 
 
+def _fmt_money(v) -> str:
+    return "-" if v is None else f"{v:,.2f}"
+
+
+def cmd_paystub(args) -> int:
+    """Pay stubs -> year-end projection, estimated W-2 and household signals. In memory, no vault."""
+    import json
+
+    from .payroll import analyze_paystubs
+    from .store import to_jsonable
+    files = []
+    try:
+        for f in args.files:
+            p = Path(f).expanduser()
+            files.append((p.name, p.read_bytes(), args.owner))
+        for f in args.spouse or []:
+            p = Path(f).expanduser()
+            files.append((p.name, p.read_bytes(), "spouse"))
+        report = analyze_paystubs(files, final=args.final, frequency=args.frequency,
+                                  filing_status=args.filing_status,
+                                  spouse_no_earned_income=args.spouse_no_earned_income, year=args.year)
+    except (OSError, ValueError) as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 1
+    if args.out:
+        out = Path(args.out).expanduser()
+        if out.suffix.lower() == ".xlsx":
+            from .reports.paystub_export import export_paystub_xlsx
+            export_paystub_xlsx(report, out)
+        else:
+            from .reports.paystub_export import export_paystub_csv
+            export_paystub_csv(report, out)
+        print(f"Wrote {out} (plaintext - store it somewhere safe).", file=sys.stderr)
+    if args.json:
+        print(json.dumps(to_jsonable(report), indent=2))
+        return 0
+    print(report.label)
+    print(f"Tax year {report.year}, filing status {report.filing_status}")
+    for w in report.w2:
+        basis = "YTD as final" if w.final else f"{w.periods_remaining} pay dates left, {w.frequency}"
+        print(f"\n{w.owner}: {w.employer or '(employer not found)'} ({basis})")
+        for box in sorted(w.boxes, key=int):
+            print(f"  box {box:>2}  {_fmt_money(w.boxes[box]):>14}")
+        for code, v in w.box12.items():
+            print(f"  box 12{code:<3}{_fmt_money(v):>14}")
+        print(f"  box 13  retirement plan: {'yes' if w.box13_retirement_plan else 'no'}")
+        for line in w.box14:
+            print(f"  box 14  {line}")
+    if report.signals:
+        print("\nSignals")
+        for s in report.signals:
+            who = s.owner or "household"
+            print(f"  [{s.severity}] {who}: {s.title}")
+            print(f"      {s.explanation} ({s.citation})")
+    for wn in report.warnings:
+        print(f"warning: {wn}", file=sys.stderr)
+    print(f"\n{report.disclaimer}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="ledgerstitch", description="Private, local expense consolidation.")
     p.add_argument("--version", action="version", version=f"ledgerstitch {__version__}")
@@ -373,6 +434,22 @@ def build_parser() -> argparse.ArgumentParser:
     pb.add_argument("--seed", type=int, default=DEFAULT_SEED, help="corpus seed (default %(default)s)")
     pb.add_argument("--corpus-out", default=None, metavar="DIR", help="also keep the generated corpus here")
     pb.set_defaults(func=cmd_benchmark)
+
+    pp = sub.add_parser("paystub", parents=[common],
+                        help="pay stubs -> year-end projection, estimated W-2 and free payroll signals")
+    pp.add_argument("files", nargs="+", help="pay stub PDFs (text-based) or text files")
+    pp.add_argument("--owner", choices=["you", "spouse"], default="you", help="whose stubs FILE... are")
+    pp.add_argument("--spouse", action="append", metavar="FILE", help="a spouse's pay stub (repeatable)")
+    pp.add_argument("--final", action="store_true", help="treat YTD as the year's final totals (no projection)")
+    pp.add_argument("--frequency", choices=["weekly", "biweekly", "semimonthly", "monthly"], default=None,
+                    help="pay frequency (default: detected from the pay period)")
+    pp.add_argument("--filing-status", choices=["single", "mfj", "mfs"], default=None)
+    pp.add_argument("--spouse-no-earned-income", action="store_true",
+                    help="one spouse has no earned income (dependent care FSA warning)")
+    pp.add_argument("--year", type=int, default=None)
+    pp.add_argument("--json", action="store_true", help="print the full result as JSON")
+    pp.add_argument("--out", default=None, help="also write the estimate to a .csv or .xlsx file")
+    pp.set_defaults(func=cmd_paystub)
 
     # Add-ons (e.g. LedgerStitch Pro's `ai-test`) add their own subcommands.
     from . import plugins

@@ -51,6 +51,7 @@ ledgerstitch/
   reports/excel.py                # Reporting engineer
   reports/csv_export.py           # Reporting engineer
   reports/quickbooks.py           # Reporting engineer
+  payroll/                        # pay stubs → estimated W-2 + payroll signals (Tax/Accounting lead)
   store.py                        # Backend engineer
   api.py                          # Backend engineer
   cli.py, __main__.py             # Backend engineer
@@ -199,6 +200,21 @@ def export_iif(txns, accounts, path: Path, account_map: dict) -> Path   # QuickB
 ```
 Exports exclude duplicates; Business/Personal/Review lanes count as expenses only for `direction == out` minus matched refunds.
 
+### 4.6a payroll (pay stubs; in memory, never stored)
+```python
+# payroll/__init__.py
+def analyze_paystubs(files: list[tuple[str, bytes, str]],     # (filename, data, owner "you"|"spouse")
+                     final=False, frequency=None, filing_status=None,
+                     spouse_no_earned_income=False, year=None) -> PayrollReport   # stubs, w2, signals, warnings
+# payroll/paystub.py   parse_paystub(filename, data, owner) -> PayStub   (Rippling / ADP / generic)
+# payroll/w2.py        estimate_w2(stub, final, frequency, year) -> W2Estimate  (boxes 1-6, 10, 12, 13, 14)
+# payroll/signals.py   household_signals(w2s, year, filing_status, spouse_no_earned_income) -> list[Signal]
+# payroll/limits.py    LIMITS[year]: SS wage base, 402(g), HSA, health FSA, DCAP (cited)
+# reports/paystub_export.py  export_paystub_csv / export_paystub_xlsx (labelled ESTIMATE)
+```
+Payroll arithmetic only, no income tax (docs/TAX_NOTES.md section 8). Identifiers are masked with
+`security.redact.mask_identifiers` before parsing.
+
 ### 4.7 store.py
 `Workspace` wraps an open `Vault`; holds accounts, transactions, rules, settings, imports in memory,
 persists via `vault.put_json("transactions", ...)` etc. Methods: `add_import(filename, data) -> ImportResult`,
@@ -232,6 +248,9 @@ GET/PUT /api/settings                   # ai_enabled, provider, model, business_
 GET  /api/summary?year=
 GET  /api/export/{xlsx|csv|qbo|iif}?year=   -> file download
 POST /api/license {key}
+POST /api/paystubs (multipart file[], spouse_file[], owner?, final?, frequency?, filing_status?,
+                    spouse_no_earned_income?, year?)   -> {stubs, w2, signals, warnings, label}  # not stored
+POST /api/paystubs/export/{csv|xlsx}  (same form)    -> file download, labelled ESTIMATE
 ```
 
 ### 4.9 Frontend (vanilla JS, no build, no third-party scripts/fonts — CSP `default-src 'self'`)

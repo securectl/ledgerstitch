@@ -21,6 +21,24 @@ profile, account_id, import_id) -> (txns, warnings, info)` (see `ingest/dispatch
 
 XML is always parsed with `defusedxml` (no DTD/entity expansion).
 
+### Pay stubs (`payroll/paystub.py`)
+
+Pay stubs aren't statements, so they don't go through `parse_any` or into the ledger. They have
+their own entry point, `payroll.analyze_paystubs(...)` (CLI `ledgerstitch paystub`, API
+`POST /api/paystubs`). The tool parses them in memory, projects them to year end and returns an
+estimated W-2. It doesn't store them (see TAX_NOTES.md section 8).
+
+| Layout | Recognized by | Notes |
+|---|---|---|
+| Rippling-style | "EARNINGS STATEMENT", EMPLOYEE TAXES, CURRENT / YTD columns | EMPLOYEE and COMPANY contribution columns on DEDUCTIONS rows |
+| ADP-style | "this period" / "year to date", Statutory Deductions, Period Starting / Ending | space-separated amounts (`6 843 29`, `-487 36`); `*` = excluded from federal taxable wages; "Your federal taxable wages this period are $X" is cross-checked |
+| Generic | any "label  current  YTD" table, with or without a header row | the last two amounts on a line are current and YTD |
+
+Input: text-based PDFs (rendered to fixed-column text with pdfplumber, the statement parser's
+library) or plain text. SSNs, account, routing and employee numbers are masked
+(`security.redact.mask_identifiers`, last 4 kept) before parsing, so no output carries them.
+Fixtures: `tests/fixtures/make_paystubs.py` (synthetic, deterministic).
+
 ### Payment platforms and fintech ledgers (`ingest/platforms.py`)
 Selected by the catalog id. Without these rules a plain import double-counts income
 (the platform charge *and* the bank deposit of the payout) and hides fees.

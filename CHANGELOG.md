@@ -8,6 +8,27 @@ vault format, file formats or the plugin API; **MINOR** for new features; **PATC
 Each release's section is used as its GitHub release notes, so write for users, not for
 maintainers. Security fixes are listed under **Security** and announced in the advisory, too.
 
+## [Unreleased]
+
+### Added
+- **Pay stub import → year-end projection → estimated W-2.** `ledgerstitch paystub FILE...
+  [--owner you|spouse] [--spouse FILE] [--final] [--out w2.xlsx]` and `POST /api/paystubs`
+  (`/api/paystubs/export/{csv|xlsx}`) read Rippling-style, ADP-style (including space-separated
+  amounts such as `6 843 29`) and generic pay stubs from text-based PDFs or text. The tool
+  classifies deductions (401(k)/403(b), Roth, HSA, health FSA, dependent care, Sec. 125,
+  post-tax, reimbursements), checks pre-tax status against the Social Security and Medicare
+  arithmetic, projects to December 31 by pay frequency, and estimates W-2 boxes 1-6, 10, 12, 13
+  and 14, labelled "ESTIMATE — not issued by employer".
+- **Free payroll signals** for a household (you and a spouse, several employers): excess Social
+  Security withheld, 402(g) deferral room or excess, HSA with a general-purpose health FSA,
+  HSA / FSA / dependent care over the limit, dependent care with a spouse who has no earned
+  income, and Additional Medicare Tax not withheld. Each signal has a dollar amount and a
+  citation. No income tax is computed (docs/TAX_NOTES.md section 8).
+
+### Security
+- `security.redact.mask_identifiers` masks SSNs, account, routing and employee numbers (last 4
+  kept) in documents shown back to the user. AI descriptor redaction now also removes SSNs.
+
 ## [1.2.0] - 2026-10-19
 
 This repository's history starts at 1.2.0. Earlier release notes are kept below for reference.
